@@ -14,7 +14,7 @@ Matching::Matching(bool flag)
 void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std::vector<cv::DMatch> >& clusterMatches)
 {
 	dataSetSize = patterns.size();
-
+	//
 	//すべての画像をマッチングする
 	for(int i = 0; i < dataSetSize; i++)
 	{
