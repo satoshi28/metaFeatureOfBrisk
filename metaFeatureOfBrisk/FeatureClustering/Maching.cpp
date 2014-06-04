@@ -1,0 +1,237 @@
+#include "stdafx.h"
+#include "Matching.h"
+
+Matching::Matching(cv::Ptr<cv::DescriptorMatcher> matcher)
+	: m_matcher(matcher)
+{
+}
+
+Matching::Matching(bool flag)
+{
+	m_enableMultipleRatioTest = flag;
+}
+
+void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std::vector<cv::DMatch> >& clusterMatches)
+{
+	dataSetSize = patterns.size();
+
+	//すべての画像をマッチングする
+	for(int i = 0; i < dataSetSize; i++)
+	{
+		//処理用変数宣言
+		std::vector<cv::KeyPoint> queryKeypoints;
+		cv::Mat queryDescriptors;						//クエリディスクリプタ
+		std::vector<std::vector<cv::KeyPoint>> trainKeypoints;
+		std::vector<cv::Mat> trainDescriptors;			//訓練ディスクリプタ
+		std::vector<cv::DMatch> matches;				//マッチングで得られた結果
+
+		//macherを用意
+		std::vector< cv::Ptr<cv::DescriptorMatcher> > matchers( dataSetSize -1 );
+		for(int k = 0; k < dataSetSize -1; k++)
+		{
+			matchers[k] = cv::DescriptorMatcher::create(matcherName);
+		}
+
+
+		//処理部
+		queryDescriptors = patterns[i].descriptors;		//クエリ画像
+		queryKeypoints = patterns[i].keypoints;
+
+		for(int j = 0; j < dataSetSize; j++)
+		{
+			//クエリ画像以外を訓練ディスクリプタに格納
+			if(i != j)
+			{
+				trainDescriptors.push_back( patterns[j].descriptors );
+				trainKeypoints.push_back(patterns[j].keypoints);
+			}
+		}
+
+		//trainデータをmatchersに追加
+		train(trainDescriptors, matchers);
+		
+		// Get matches
+		match( queryKeypoints, queryDescriptors,trainKeypoints,  matchers, matches);
+
+		//結果を格納
+		clusterMatches.push_back(matches);
+	}
+}
+
+
+void Matching::train(const std::vector<cv::Mat> trainDescriptors, std::vector<cv::Ptr<cv::DescriptorMatcher> >& matchers)
+{
+
+	std::vector<cv::Mat> descriptors(1);
+
+	for(int i = 0; i < trainDescriptors.size(); i++)
+	{
+		// API of cv::DescriptorMatcher is somewhat tricky
+		// First we clear old train data:
+		matchers[i]->clear();
+
+		// Then we add vector of descriptors (each descriptors matrix describe one image). 
+		// This allows us to perform search across multiple images:
+
+		descriptors[0]= trainDescriptors[i].clone();
+		matchers[i]->add(descriptors);
+
+		// After adding train data perform actual train:
+		matchers[i]->train();
+	}
+}
+
+
+
+void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescriptors,
+				std::vector<std::vector<cv::KeyPoint>> trainKeypoints,
+				std::vector<cv::Ptr<cv::DescriptorMatcher> >& matchers, std::vector<cv::DMatch>& matches)
+{
+
+	if(m_enableMultipleRatioTest == true)
+	{
+		matches.clear();
+
+		//マッチングを格納
+		std::vector< std::vector<cv::DMatch>> patternMatches(dataSetSize -1);
+
+		// To avoid NaN's when best match has zero distance we will use inversed ratio. 
+		const float minRatio = 0.8f;
+
+		//最近傍点の探索
+		for(int i = 0; i < dataSetSize -1 ; i++)
+		{
+			//knnマッチング
+			std::vector< std::vector<cv::DMatch>>  knnMatches;
+
+			// queryとmatcherに保存されている特徴量をknn構造体を用いて最近傍点を検索する.
+			matchers[i]->knnMatch(queryDescriptors, knnMatches, 1);
+
+			//_matchesにm_knnMathesの要素をコピー
+			for(int l = 0; l < knnMatches.size(); l++)
+			{
+				if(knnMatches[l].empty() == false)						//マッチングが存在するか
+					patternMatches[i].push_back(knnMatches[l][0]);
+			}
+
+			//初期化
+			knnMatches.clear();
+			
+		}
+		
+		//クエリ特徴点の数までループ
+		for (size_t j = 0; j <patternMatches[0].size(); j++)
+		{
+			float worstdistance = 0;		//最も悪いマッチングのユークリッド距離(0未満になることはない)
+			int worstId=-1;					//最も悪いマッチングのID
+
+			//最も悪いマッチングの探索
+			for(size_t k = 0; k < dataSetSize - 1 ; k++)
+			{
+				if(worstdistance <= patternMatches[k][j].distance)
+				{
+					worstdistance =  patternMatches[k][j].distance;
+					worstId = k;
+				}
+			}
+
+			for(size_t i=0; i< dataSetSize - 1 ; i++)
+			{
+				//
+				if(worstId != i)
+				{
+					cv::DMatch& currentMatch   =patternMatches[i][j];
+					float distanceRatio = currentMatch.distance / worstdistance;
+					
+					// Pass only matches where distance ratio between 
+					// nearest matches is greater than 1.5 (distinct criteria)
+					if (distanceRatio < minRatio)
+					{
+						//
+						currentMatch.imgIdx = i;
+						//当たり値を格納
+					    matches.push_back(currentMatch);
+					}
+				}
+			}
+		}
+	
+	}else
+	{
+		const float minRatio = 0.8f;
+		matches.clear();
+
+		//最近傍点の探索
+		for(int i = 0; i < dataSetSize -1 ; i++)
+		{
+			//knnマッチング
+			std::vector< std::vector<cv::DMatch>>  knnMatches;
+
+			// queryとmatcherに保存されている特徴量をknn構造体を用いて最近傍点を検索する.
+			matchers[i]->knnMatch(queryDescriptors, knnMatches, 2);
+
+			//
+			std::vector<cv::DMatch> correctMatches;
+
+			//ratio test
+			for(int j = 0; j < knnMatches.size(); j++)
+			{
+				if(knnMatches[j].empty() == false)
+				{
+					const cv::DMatch& bestMatch = knnMatches[j][0];
+					const cv::DMatch& betterMatch = knnMatches[j][1];
+
+					float distanceRatio = bestMatch.distance / betterMatch.distance;
+
+					//距離の比が1.5以下の特徴だけ保存
+					if(distanceRatio < minRatio)
+					{
+						correctMatches.push_back(bestMatch);
+					}
+				}
+			}
+			//幾何学的整合性チェック
+			geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches);
+
+			//要素の移し替え
+			for(int k = 0; k < correctMatches.size(); k++)
+			{
+				matches.push_back(correctMatches[k]);
+			}
+
+			//初期化
+			knnMatches.clear();
+			correctMatches.clear();
+			
+		}
+
+	}
+}
+
+void Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match)
+{
+	if(match.size() < 8)
+		;
+
+	std::vector<cv::Point2f>  queryPoints, trainPoints; 
+	for(int i = 0; i < match.size(); i++)
+	{
+		queryPoints.push_back(queryKeypoints[match[i].queryIdx].pt);
+		trainPoints.push_back(trainKeypoints[match[i].trainIdx].pt);
+	}
+
+	//幾何学的整合性チェック
+	std::vector<unsigned char> inliersMask(queryPoints.size() );
+
+	//幾何学的整合性チェックによって当たり値を抽出
+	cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 10, inliersMask);
+
+	std::vector<cv::DMatch> inliers;
+	for(size_t i =0 ; i < inliersMask.size(); i++)
+	{
+		if(inliersMask[i])
+			inliers.push_back(match[i]);
+	}
+
+	match.swap(inliers);
+}
