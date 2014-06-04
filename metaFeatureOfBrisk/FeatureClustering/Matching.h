@@ -33,7 +33,7 @@ private:
 	void match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescriptors,std::vector<std::vector<cv::KeyPoint>> trainKeypoints,  std::vector<cv::Ptr<cv::DescriptorMatcher> >& matchers, std::vector<cv::DMatch>& matches);
 
 	//幾何学的整合性チェック
-	void geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match);
+	bool geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match);
 private:
     
 	//画像セットの数

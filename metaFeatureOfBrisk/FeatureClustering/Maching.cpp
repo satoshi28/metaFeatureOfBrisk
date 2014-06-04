@@ -191,12 +191,15 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 				}
 			}
 			//幾何学的整合性チェック
-			geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches);
+			bool passFlag = geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches);
 
-			//要素の移し替え
-			for(int k = 0; k < correctMatches.size(); k++)
-			{
-				matches.push_back(correctMatches[k]);
+			//幾何学的整合性チェックに通過したもののみ登録する
+			if(passFlag == true){
+				//要素の移し替え
+				for(int k = 0; k < correctMatches.size(); k++)
+				{
+					matches.push_back(correctMatches[k]);
+				}
 			}
 
 			//初期化
@@ -208,10 +211,10 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 	}
 }
 
-void Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match)
+bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match)
 {
-	if(match.size() < 8)
-		;
+	if(match.size() < 30)
+		return false;
 
 	std::vector<cv::Point2f>  queryPoints, trainPoints; 
 	for(int i = 0; i < match.size(); i++)
@@ -234,4 +237,5 @@ void Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 	}
 
 	match.swap(inliers);
+	return true;
 }
