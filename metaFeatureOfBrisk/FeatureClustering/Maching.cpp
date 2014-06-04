@@ -190,6 +190,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 					}
 				}
 			}
+
 			//幾何学的整合性チェック
 			bool passFlag = geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches);
 
