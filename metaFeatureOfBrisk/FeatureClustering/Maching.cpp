@@ -214,7 +214,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 
 bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match)
 {
-	if(match.size() < 30)
+	if(match.size() < 8)
 		return false;
 
 	std::vector<cv::Point2f>  queryPoints, trainPoints; 

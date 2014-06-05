@@ -35,8 +35,6 @@ bool ExtractFeatures::getFeatures(std::vector<cv::Mat>& images,
 		_pattern.image = images[i];
 
 		patterns.push_back( _pattern );
-
-		std::cout << _pattern.descriptors.size() << std::endl;
 	}
 	return true;
 }

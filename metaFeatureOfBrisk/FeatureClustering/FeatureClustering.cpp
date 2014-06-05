@@ -33,21 +33,21 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	clusterDescriptors(clusterMatches, clusters);
 
 	std::cout << "OK" << std::endl;
-	for(int i = 0; i < patterns.size(); i++)
+	/*for(int i = 0; i < patterns.size(); i++)
 	{
 		showResult(patterns[i], clusters[i]);
-
 		cv::waitKey(0);
-	}
+	}*/
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 
+	/*
 	for(int i = 0; i < patterns.size(); i++)
 	{
 		showMetaFeatures(patterns[i].image,clusters[i], metaFeatures);
 
 		cv::waitKey(0);
-	}
+	}*/
 	//後処理
 	patterns.clear();
 
@@ -396,7 +396,6 @@ void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters
 					{
 						
 						metaDescriptors.row(total) += clusters[num].singleDescriptors.row(descSize[num]);
-						std::cout << clusters[num].singleDescriptors.row(descSize[num]) << std::endl;
 						descSize[num] += 1;
 					}
 				}else

@@ -4,6 +4,8 @@
 ////////////////////////////////////////////////////////////////////
 #include <opencv2/opencv.hpp>
 
+#include "Gps.h"
+
 /**
  * Store the image data and computed descriptors of target pattern
  */
@@ -13,5 +15,7 @@ struct Pattern
 
   std::vector<cv::KeyPoint> keypoints;
   cv::Mat                   descriptors;
+  Gps						gps;
+  int						numberOfDB;
 };
 #endif

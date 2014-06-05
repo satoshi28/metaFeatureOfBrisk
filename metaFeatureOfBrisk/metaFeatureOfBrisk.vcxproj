@@ -83,13 +83,16 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ConnectingDB\ConnectingDB.h" />
+    <ClInclude Include="ConnectingDB\exifGps.h" />
+    <ClInclude Include="CONSTANT.h" />
     <ClInclude Include="FeatureClustering\ClusterOfFeature.h" />
-    <ClInclude Include="FeatureClustering\CONSTANT.h" />
     <ClInclude Include="FeatureClustering\ExtractFeatures.hpp" />
     <ClInclude Include="FeatureClustering\FeatureClustering.h" />
     <ClInclude Include="FeatureClustering\Matching.h" />
-    <ClInclude Include="FeatureClustering\Pattern.hpp" />
+    <ClInclude Include="Gps.h" />
     <ClInclude Include="GroupPath.h" />
+    <ClInclude Include="Pattern.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
@@ -98,6 +101,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="ConnectingDB\ConnectingDB.cpp" />
+    <ClCompile Include="ConnectingDB\exifGps.cpp" />
     <ClCompile Include="FeatureClustering\ExtractFeatures.cpp" />
     <ClCompile Include="FeatureClustering\FeatureClustering.cpp" />
     <ClCompile Include="FeatureClustering\Maching.cpp" />

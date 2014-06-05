@@ -19,6 +19,9 @@
     <Filter Include="ヘッダー ファイル\FeatureClustering">
       <UniqueIdentifier>{fec56811-b4ff-4738-aa26-fb95af266cf7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\ConnectingDB">
+      <UniqueIdentifier>{7195112c-65e7-4261-afe5-8099ad9a5938}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -33,9 +36,6 @@
     <ClInclude Include="FeatureClustering\ClusterOfFeature.h">
       <Filter>ヘッダー ファイル\FeatureClustering</Filter>
     </ClInclude>
-    <ClInclude Include="FeatureClustering\CONSTANT.h">
-      <Filter>ヘッダー ファイル\FeatureClustering</Filter>
-    </ClInclude>
     <ClInclude Include="FeatureClustering\ExtractFeatures.hpp">
       <Filter>ヘッダー ファイル\FeatureClustering</Filter>
     </ClInclude>
@@ -45,10 +45,22 @@
     <ClInclude Include="FeatureClustering\Matching.h">
       <Filter>ヘッダー ファイル\FeatureClustering</Filter>
     </ClInclude>
-    <ClInclude Include="FeatureClustering\Pattern.hpp">
-      <Filter>ヘッダー ファイル\FeatureClustering</Filter>
-    </ClInclude>
     <ClInclude Include="GroupPath.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectingDB\ConnectingDB.h">
+      <Filter>ソース ファイル\ConnectingDB</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectingDB\exifGps.h">
+      <Filter>ソース ファイル\ConnectingDB</Filter>
+    </ClInclude>
+    <ClInclude Include="Pattern.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="CONSTANT.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Gps.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -75,6 +87,12 @@
     </ClCompile>
     <ClCompile Include="metaFeatures.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectingDB\ConnectingDB.cpp">
+      <Filter>ソース ファイル\ConnectingDB</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectingDB\exifGps.cpp">
+      <Filter>ソース ファイル\ConnectingDB</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

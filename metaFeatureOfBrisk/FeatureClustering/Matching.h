@@ -5,8 +5,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/nonfree/features2d.hpp>
 
-#include "Pattern.hpp"
-#include "CONSTANT.h"
+#include "../Pattern.h"
+#include "../CONSTANT.h"
 
 
 /**
