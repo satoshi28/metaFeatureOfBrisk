@@ -41,6 +41,8 @@ private:
 	bool m_enableMultipleRatioTest;
     cv::Ptr<cv::DescriptorMatcher> m_matcher;
 
+	int imgNumberOfAdjstment;
+
 };
 
 

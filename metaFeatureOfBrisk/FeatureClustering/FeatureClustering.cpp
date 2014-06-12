@@ -33,11 +33,12 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	clusterDescriptors(clusterMatches, clusters);
 
 	std::cout << "OK" << std::endl;
+	/*
 	for(int i = 0; i < patterns.size(); i++)
 	{
 		showResult(patterns[i], clusters[i]);
 		cv::waitKey(0);
-	}
+	}*/
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 

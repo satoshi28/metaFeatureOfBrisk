@@ -14,6 +14,8 @@ Matching::Matching(bool flag)
 void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std::vector<cv::DMatch> >& clusterMatches)
 {
 	dataSetSize = patterns.size();
+	imgNumberOfAdjstment = 0;
+
 	//
 	//すべての画像をマッチングする
 	for(int i = 0; i < dataSetSize; i++)
@@ -24,6 +26,7 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 		std::vector<std::vector<cv::KeyPoint>> trainKeypoints;
 		std::vector<cv::Mat> trainDescriptors;			//訓練ディスクリプタ
 		std::vector<cv::DMatch> matches;				//マッチングで得られた結果
+
 
 		//macherを用意
 		std::vector< cv::Ptr<cv::DescriptorMatcher> > matchers( dataSetSize -1 );
@@ -55,6 +58,9 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 
 		//結果を格納
 		clusterMatches.push_back(matches);
+
+		//matchesの画像番号修正用
+		imgNumberOfAdjstment++;
 	}
 }
 
@@ -187,6 +193,8 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 		const float minRatio = 0.8f;
 		matches.clear();
 
+		int imgNumber = 0;
+
 		//最近傍点の探索
 		for(int i = 0; i < dataSetSize -1 ; i++)
 		{
@@ -199,12 +207,13 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 			//
 			std::vector<cv::DMatch> correctMatches;
 
+
 			//ratio test
 			for(int j = 0; j < knnMatches.size(); j++)
 			{
 				if(knnMatches[j].empty() == false)
 				{
-					const cv::DMatch& bestMatch = knnMatches[j][0];
+					 cv::DMatch& bestMatch = knnMatches[j][0];
 					const cv::DMatch& betterMatch = knnMatches[j][1];
 
 					float distanceRatio = bestMatch.distance / betterMatch.distance;
@@ -212,6 +221,11 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 					//距離の比が1.5以下の特徴だけ保存
 					if(distanceRatio < minRatio)
 					{
+						if(i == imgNumberOfAdjstment)
+						{
+							imgNumber = imgNumberOfAdjstment + 1;
+						}
+						bestMatch.imgIdx = imgNumber;
 						correctMatches.push_back(bestMatch);
 					}
 				}
@@ -232,9 +246,9 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 			//初期化
 			knnMatches.clear();
 			correctMatches.clear();
-			
+			imgNumber++;
 		}
-
+		
 	}
 }
 
