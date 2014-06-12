@@ -94,7 +94,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 
 		//マッチングを格納
 		std::vector< std::vector<cv::DMatch>> patternMatches(dataSetSize -1);
-
+		std::vector<cv::DMatch> tmpMatches;
 		// To avoid NaN's when best match has zero distance we will use inversed ratio. 
 		const float minRatio = 0.8f;
 
@@ -118,7 +118,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 			knnMatches.clear();
 			
 		}
-		
+
 		//クエリ特徴点の数までループ
 		for (size_t j = 0; j <patternMatches[0].size(); j++)
 		{
@@ -137,7 +137,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 
 			for(size_t i=0; i< dataSetSize - 1 ; i++)
 			{
-				//
+				
 				if(worstId != i)
 				{
 					cv::DMatch& currentMatch   =patternMatches[i][j];
@@ -150,11 +150,37 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 						//
 						currentMatch.imgIdx = i;
 						//当たり値を格納
-					    matches.push_back(currentMatch);
+					    tmpMatches.push_back(currentMatch);
 					}
 				}
 			}
 		}
+		//幾何学的整合性チェックの下準備
+		std::vector< std::vector<cv::DMatch>> correctMatches(dataSetSize -1);	//multipleRatioTestで通過ペアを画像ごとに保存
+
+		for(int i = 0; i < dataSetSize -1; i++)
+		{
+			for(int j =0; j < tmpMatches.size(); j++)
+			{
+				if( i== tmpMatches[j].imgIdx)
+					correctMatches[i].push_back(tmpMatches[j]);
+			}
+		}
+		
+		for(int i = 0; i < dataSetSize -1; i++)
+		{
+			//幾何学的整合性チェック
+			bool passFlag = geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches[i]);
+			//幾何学的整合性チェックに通過したもののみ登録する
+			if(passFlag == true){
+				//要素の移し替え
+				for(int k = 0; k < correctMatches[i].size(); k++)
+				{
+					matches.push_back(correctMatches[i][k]);
+				}
+			}
+		}
+
 	
 	}else
 	{

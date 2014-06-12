@@ -16,7 +16,7 @@ int main(array<System::String ^> ^args)
 	ConnectingDB db;
 	exifGps gps;
 	/* •Ï”éŒ¾ */
-	String^ folder = "C:\\Users\\satoshi\\Documents\\Image\\moutuji";
+	String^ folder = "C:\\Users\\satoshi\\Documents\\Image\\ZuBuD";
 	std::vector< std::vector<std::string> > sortFile;
 	std::vector<std::vector<Pattern>> matches;
 
@@ -41,7 +41,7 @@ int main(array<System::String ^> ^args)
 		std::cout << "-----------------" << std::endl;
 	}
 
-	db.updateDB(metaFeatures);
+	//db.updateDB(metaFeatures);
 	
 	return 0;
 }

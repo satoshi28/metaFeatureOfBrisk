@@ -33,11 +33,11 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	clusterDescriptors(clusterMatches, clusters);
 
 	std::cout << "OK" << std::endl;
-	/*for(int i = 0; i < patterns.size(); i++)
+	for(int i = 0; i < patterns.size(); i++)
 	{
 		showResult(patterns[i], clusters[i]);
 		cv::waitKey(0);
-	}*/
+	}
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 
@@ -166,7 +166,9 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 				for(int k = 0; k < clusterMatches[i].size(); k++)
 				{
 					if(id == clusterMatches[i][k].queryIdx)
+					{
 						rank += 1;
+					}
 				}
 
 				int queryIdx = clusterMatches[i][j].queryIdx;		//queryのインデックス
