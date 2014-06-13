@@ -31,7 +31,7 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	std::vector<ClusterOfFeature> clusters;
 	//マッチング結果からクラスタリング特徴量を作成する
 	clusterDescriptors(clusterMatches, clusters);
-
+	//
 	std::cout << "OK" << std::endl;
 	/*
 	for(int i = 0; i < patterns.size(); i++)
