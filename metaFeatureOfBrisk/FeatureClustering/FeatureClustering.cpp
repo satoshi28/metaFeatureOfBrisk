@@ -226,27 +226,22 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 
 }
 
-void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters, Pattern& metaFeature)
+void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> ClusterOfFeatures, Pattern& metaFeature)
 {
-	//特徴量の次元数
-	int cols = clusters[0].metaDescriptors.cols;
-
-	//処理用変数
-	std::vector< std::pair<int, int> > imageRankingList;	//各画像のランキング(rank, index)
-	std::vector<cv::Mat> rankedDescriptors;					//rankに基づいて並び替えた各clusterの特徴量を保存
-
+	int descTotalSize = 0;
+	cv::Mat featuresUnclustered;
 
 	//--------------------step 1 ------------------------------------//
-
+	std::vector< std::pair<int, int> > imageRankingList;	//各画像のランキング(rank, index)
 	//画像のランク付け
-	for(int i = 0; i < clusters.size(); i++)
+	for(int i = 0; i < ClusterOfFeatures.size(); i++)
 	{
-		int rank = clusters[i].rankingList.size();					//画像のランク
+		int rank = ClusterOfFeatures[i].rankingList.size();					//画像のランク
 		std::pair<int , int> list;
 
-		for(int j = 0; j < clusters[i].rankingList.size(); j++)
+		for(int j = 0; j < ClusterOfFeatures[i].rankingList.size(); j++)
 		{
-			rank += clusters[i].rankingList[j];
+			rank += ClusterOfFeatures[i].rankingList[j];
 		}
 
 		list.first = rank;
@@ -258,45 +253,60 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 	//画像のランキングに基づいて降順に並び替え
 	std::sort(imageRankingList.begin(), imageRankingList.end(),std::greater<std::pair<int, int>>() );
 
-	//-----------------step 2 --------------------------------------------//
 
-	//下準備、各clusterのmetaDescriptorsをclusterサイズ(マッチングした数)に基づいて降順に並び替え
-	for(int i = 0; i < clusters.size(); i++)
+
+	for(int i = 0;i < ClusterOfFeatures.size(); i++)
 	{
-		std::vector<std::pair<int, int>> index;						//並び替え用処理変数pair(rank, 特徴量のindex)
-		int num = imageRankingList[i].second;						//画像ランキング
-																	//clusters[num]は最も画像ランキングが高いやつのcluster
-		for(int j = 0; j < clusters[num].rankingList.size(); j++)
-		{
-			std::pair<int, int> pair;								//pair(特徴量のrank, 特徴量のindex)
-			pair.first = clusters[num].rankingList[j];
-			pair.second = j;
-
-			index.push_back(pair);
-		}
-		//並び替え
-		std::sort(index.begin(), index.end(), std::greater<std::pair<int, int>>());
-
-		//各clusterのmetaDescriptorsをclusterサイズ(マッチングした数)に基づいて降順に並び替え
-		cv::Mat descriptors = cv::Mat::zeros(index.size(), cols,  CV_8U);
-		for(int k = 0; k < index.size(); k++)
-		{
-			descriptors.row(k) += clusters[num].metaDescriptors.row(index[k].second);
-
-		}
-		//画像ランキング順にクラスタの特徴量を保存
-		rankedDescriptors.push_back(descriptors);
+		featuresUnclustered.push_back(ClusterOfFeatures[i].metaDescriptors);
+		descTotalSize += ClusterOfFeatures[i].metaDescriptors.rows;
 	}
 
-	//--------------------- step 3 ---------------------------------------// 
-	//画像ランキングが高い画像の、最も多くマッチングした特徴量を優先して割り当てる処理
-	bool isBeFilled = false;
-	metaFeature.descriptors = cv::Mat::zeros(m_budget, cols,  CV_8U);		//初期化
-	isBeFilled = createMetaFeature(rankedDescriptors, metaFeature.descriptors);
+	const int cluster_count = descTotalSize *0.8; /* number of cluster */
 	
-	if(isBeFilled == false)
+	// (2)reshape the image to be a 1 column matrix 
+	cv::Mat points;
+	featuresUnclustered.convertTo(points, CV_32FC1);
+	//points = points.reshape(1, featuresUnclustered.rows*featuresUnclustered.cols);
+	
+	// (3)run k-means clustering algorithm to segment pixels in RGB color space
+	cv::Mat_<int> clusters(points.rows, CV_32SC1);
+	cv::Mat centers;
+
+	kmeans(points, cluster_count, clusters, 
+	   cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0), 1, cv::KMEANS_PP_CENTERS,centers);
+	
+	centers.convertTo(centers, CV_8U);
+
+	//評価
+	std::vector<std::pair<int , int>> rankingList(centers.rows);
+	for(int i = 0; i < rankingList.size(); i++)
 	{
-		addSingleFeatures(clusters, imageRankingList, metaFeature.descriptors);
+		rankingList[i].first = 0;
+		rankingList[i].second = i;
+	}
+
+	for(int i = 0; i < points.rows; i++)
+	{
+		int cluster_idx = clusters.at<int>(i,0);
+		rankingList[cluster_idx].first +=1;
+	}
+
+	//画像のランキングに基づいて降順に並び替え
+	std::sort(rankingList.begin(),rankingList.end(),std::greater<std::pair<int, int>>() );
+
+	for(int i = 0; i < rankingList.size(); i++)
+	{
+		int idx = rankingList[i].second;
+		metaFeature.descriptors.push_back( centers.row(idx) );
+
+		if(metaFeature.descriptors.rows >= budget)
+			break;
+	}
+
+	//予算まで達しなかった場合はシングルの特徴量を追加
+	if(metaFeature.descriptors.rows < budget)
+	{
+		addSingleFeatures(ClusterOfFeatures, imageRankingList, metaFeature.descriptors);
 	}
 }
 
