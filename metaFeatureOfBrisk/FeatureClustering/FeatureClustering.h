@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <numeric>
+#include <fstream>
 
 #include "ExtractFeatures.hpp"
 #include "Matching.h"

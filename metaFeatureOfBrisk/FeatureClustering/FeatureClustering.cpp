@@ -65,6 +65,33 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 	int id;
 	std::vector<int> matchList;
 
+	std::ofstream txtFile("matchingReslut.txt");
+
+	int size = 0;
+	for(int i=0; i< clusterMatches.size(); i++)
+	{
+		size += clusterMatches[i].size();
+	}
+
+	cv::Mat graph(size, clusterMatches.size() ,  CV_32SC1 , -1);
+
+	int a = 0;
+		//ƒOƒ‰ƒt‚Ì\’z
+	for(int i=0; i< clusterMatches.size(); i++)
+	{
+		
+		for(int j = 0; j < clusterMatches[i].size(); j++)
+		{
+			int imgNum = clusterMatches[i][j].imgIdx;
+
+			graph.at<char>(j + a,i) = clusterMatches[i][j].queryIdx;
+			graph.at<char>(j + a,imgNum) = clusterMatches[i][j].trainIdx;
+		}
+		a += clusterMatches[i].size();
+	}
+
+	txtFile << graph << std::endl;
+
 
 	if(m_enableMultipleRatioTest == true)
 	{
