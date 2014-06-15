@@ -261,7 +261,7 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> ClusterOf
 		descTotalSize += ClusterOfFeatures[i].metaDescriptors.rows;
 	}
 
-	const int cluster_count = descTotalSize *0.8; /* number of cluster */
+	const int cluster_count = descTotalSize *0.5; /* number of cluster */
 	
 	// (2)reshape the image to be a 1 column matrix 
 	cv::Mat points;
