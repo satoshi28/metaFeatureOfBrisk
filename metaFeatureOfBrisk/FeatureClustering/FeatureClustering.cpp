@@ -60,8 +60,6 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 {
 
 	int rank = 1;			//同じ空間から来た特徴点の数
-	int metaNum = 0;
-	int singleNum = 0;
 	int id;
 	std::vector<int> matchList;
 
@@ -75,9 +73,6 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 
 			//処理用変数
 			ClusterOfFeature cluster;
-			metaNum = 0;
-			cluster.metaDescriptors = cv::Mat::zeros(1, cols,  CV_8U);
-			cluster.singleDescriptors = cv::Mat::zeros(1, cols,  CV_8U);
 			matchList.clear();
 
 			//画像間でマッチングした画像をmetaDescriptorsに保存
@@ -94,11 +89,9 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 					int queryIdx = clusterMatches[i][j-1].queryIdx;		//queryのインデックス
 					matchList.push_back(queryIdx);						//マッチングリストにqueryの番号を保存
 
-					metaNum += 1;
-					cluster.metaDescriptors.resize(metaNum, 0);
 					//保存処理 
 					//特徴量の行に追加
-					cluster.metaDescriptors.row(metaNum-1) += patterns[i].descriptors.row(queryIdx);
+					cluster.metaDescriptors.push_back(patterns[i].descriptors.row(queryIdx) );
 
 
 					#if _DEBUG
@@ -113,7 +106,6 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 				}
 
 			}
-			singleNum = 0;
 			//単体の特徴量をsingleDescriptorsに保存
 			for(int k = 0; k < patterns[i].descriptors.rows; k++)
 			{
@@ -125,10 +117,8 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 					}
 					if(m == matchList.size()-1)
 					{
-						singleNum += 1;
-						cluster.singleDescriptors.resize(singleNum, 0);
 						//特徴量の行に追加
-						cluster.singleDescriptors.row(singleNum-1) += patterns[i].descriptors.row(k);
+						cluster.singleDescriptors.push_back( patterns[i].descriptors.row(k) );
 
 						#if _DEBUG
 						//特徴点を保存
@@ -154,9 +144,6 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 			rank = 0;
 			//処理用変数
 			ClusterOfFeature cluster;
-			metaNum = 0;
-			cluster.metaDescriptors = cv::Mat::zeros(1, cols,  CV_8U);
-			cluster.singleDescriptors = cv::Mat::zeros(1, cols,  CV_8U);
 			matchList.clear();
 
 			for(int j = 1; j < clusterMatches[i].size(); j++)
@@ -174,12 +161,9 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 
 				int queryIdx = clusterMatches[i][j].queryIdx;		//queryのインデックス
 				matchList.push_back(queryIdx);						//マッチングリストにqueryの番号を保存
-				metaNum += 1;
 
-				cluster.metaDescriptors.resize(metaNum, 0);
-				//保存処理 
 				//特徴量の行に追加
-				cluster.metaDescriptors.row(metaNum-1) += patterns[i].descriptors.row(queryIdx);
+				cluster.metaDescriptors.push_back(patterns[i].descriptors.row(queryIdx) );
 		
 				#if _DEBUG
 				//特徴点を保存
@@ -191,8 +175,7 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 
 				rank = 0;
 			}
-			//初期化
-			singleNum = 0;
+
 			//単体の特徴量をsingleDescriptorsに保存
 			for(int k = 0; k < patterns[i].descriptors.rows; k++)
 			{
@@ -204,10 +187,8 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 					}
 					if(m == matchList.size()-1)
 					{
-						singleNum += 1;
-						cluster.singleDescriptors.resize(singleNum, 0);
 						//特徴量の行に追加
-						cluster.singleDescriptors.row(singleNum-1) += patterns[i].descriptors.row(k);
+						cluster.singleDescriptors.push_back(patterns[i].descriptors.row(k) );
 
 						#if _DEBUG
 						//特徴点を保存
@@ -278,10 +259,10 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 		std::sort(index.begin(), index.end(), std::greater<std::pair<int, int>>());
 
 		//各clusterのmetaDescriptorsをclusterサイズ(マッチングした数)に基づいて降順に並び替え
-		cv::Mat descriptors = cv::Mat::zeros(index.size(), cols,  CV_8U);
+		cv::Mat descriptors;
 		for(int k = 0; k < index.size(); k++)
 		{
-			descriptors.row(k) += clusters[num].metaDescriptors.row(index[k].second);
+			descriptors.push_back( clusters[num].metaDescriptors.row(index[k].second) );
 
 		}
 		//画像ランキング順にクラスタの特徴量を保存
@@ -332,7 +313,7 @@ bool FeatureClustering::createMetaFeature(std::vector<cv::Mat> rankedDescriptors
 						break;
 					}else
 					{
-						metaDescriptors.row(total) += rankedDescriptors[i].row(descSize[i]);
+						metaDescriptors.push_back( rankedDescriptors[i].row(descSize[i]) );
 						descSize[i] += 1;
 					}
 				}else
