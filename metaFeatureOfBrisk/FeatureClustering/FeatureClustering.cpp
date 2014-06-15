@@ -65,7 +65,6 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 	int id;
 	std::vector<int> matchList;
 
-
 	if(m_enableMultipleRatioTest == true)
 	{
 
@@ -230,6 +229,7 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> ClusterOf
 {
 	int descTotalSize = 0;
 	cv::Mat featuresUnclustered;
+
 
 	//--------------------step 1 ------------------------------------//
 	std::vector< std::pair<int, int> > imageRankingList;	//Še‰æ‘œ‚Ìƒ‰ƒ“ƒLƒ“ƒO(rank, index)
