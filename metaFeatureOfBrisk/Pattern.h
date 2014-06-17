@@ -17,5 +17,6 @@ struct Pattern
   cv::Mat                   descriptors;
   Gps						gps;
   int						numberOfDB;
+  std::vector<std::pair<bool, int>>			paramOfKeypoints;	//first:true=meta,false=single,second:‚Ç‚Ì‰æ‘œ‚©‚ç—ˆ‚½“Á’¥“_‚©‚ðŽ¦‚·
 };
 #endif

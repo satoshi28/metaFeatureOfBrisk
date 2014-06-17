@@ -32,14 +32,14 @@ private:
 	/* マッチングした特徴量をまとめたclusterからメタ特徴量を作成する処理 */
 	void featureBudgeting(std::vector<ClusterOfFeature> clusters, Pattern& metaFeature);
 
-	bool createMetaFeature(std::vector<cv::Mat> rankedDescriptors, cv::Mat& metaDescriptors);
+	bool createMetaFeature(std::vector<cv::Mat> rankedDescriptors,std::vector< std::vector<cv::KeyPoint>> rankedKeypoints,std::vector<int> imgNumbers, Pattern& metaFeature);
 
-	void addSingleFeatures(std::vector<ClusterOfFeature> clusters,std::vector<std::pair<int, int>> rankingIndex, cv::Mat& metaDescriptors);
+	void addSingleFeatures(std::vector<ClusterOfFeature> clusters,std::vector<std::pair<int, int>> rankingIndex,Pattern& metaFeature);
 #if _DEBUG
 	/* 特徴量を描画 */
 	void showResult(Pattern pattern, ClusterOfFeature cluster);
 
-	void showMetaFeatures(cv::Mat image,ClusterOfFeature cluster, Pattern meta);
+	void showMetaFeatures(std::vector<Pattern> patterns,Pattern metaFeature);
 #endif
 
 private:
