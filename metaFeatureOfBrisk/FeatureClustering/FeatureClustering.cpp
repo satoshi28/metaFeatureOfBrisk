@@ -265,39 +265,20 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> ClusterOf
 	
 	// (2)reshape the image to be a 1 column matrix 
 	cv::Mat points;
+	int descDim = featuresUnclustered.cols;
 	featuresUnclustered.convertTo(points, CV_32FC1);
-	//points = points.reshape(1, featuresUnclustered.rows*featuresUnclustered.cols);
-	
-	// (3)run k-means clustering algorithm to segment pixels in RGB color space
-	cv::Mat_<int> clusters(points.rows, CV_32SC1);
-	cv::Mat centers;
 
-	kmeans(points, cluster_count, clusters, 
-	   cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0), 1, cv::KMEANS_PP_CENTERS,centers);
-	
-	centers.convertTo(centers, CV_8U);
+	cv::Mat centers(cluster_count,descDim,CV_32FC1);
 
-	//•]‰¿
-	std::vector<std::pair<int , int>> rankingList(centers.rows);
-	for(int i = 0; i < rankingList.size(); i++)
+	cvflann::KMeansIndexParams kmean_params(descDim, 11, cvflann::FLANN_CENTERS_KMEANSPP);
+	int a = cv::flann::hierarchicalClustering<cv::flann::L1<float>>(points,centers,kmean_params);
+
+	centers.convertTo(centers, CV_8UC1);
+	centers.resize(a,0);
+
+	for(int i = 0; i < centers.rows; i++)
 	{
-		rankingList[i].first = 0;
-		rankingList[i].second = i;
-	}
-
-	for(int i = 0; i < points.rows; i++)
-	{
-		int cluster_idx = clusters.at<int>(i,0);
-		rankingList[cluster_idx].first +=1;
-	}
-
-	//‰æ‘œ‚Ìƒ‰ƒ“ƒLƒ“ƒO‚ÉŠî‚Ã‚¢‚Ä~‡‚É•À‚Ñ‘Ö‚¦
-	std::sort(rankingList.begin(),rankingList.end(),std::greater<std::pair<int, int>>() );
-
-	for(int i = 0; i < rankingList.size(); i++)
-	{
-		int idx = rankingList[i].second;
-		metaFeature.descriptors.push_back( centers.row(idx) );
+		metaFeature.descriptors.push_back( centers.row(i) );
 
 		if(metaFeature.descriptors.rows >= budget)
 			break;
@@ -381,7 +362,7 @@ void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters
 	int total = metaDescriptors.rows + 1;	
 	int descSum = 0;
 
-	metaDescriptors.resize(m_budget, 0);
+	//metaDescriptors.resize(m_budget, 0);
 
 	//‰Šú‰»
 	for(int i = 0; i < clusters.size(); i++)
@@ -407,8 +388,10 @@ void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters
 						break;
 					}else
 					{
-						
-						metaDescriptors.row(total) += clusters[num].singleDescriptors.row(descSize[num]);
+
+
+						clusters[num].singleDescriptors.row(descSize[num]) ;
+						metaDescriptors.push_back( clusters[num].singleDescriptors.row(descSize[num]) );
 						descSize[num] += 1;
 					}
 				}else

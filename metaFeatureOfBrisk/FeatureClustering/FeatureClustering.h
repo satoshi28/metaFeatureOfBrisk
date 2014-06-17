@@ -6,6 +6,7 @@
 #include <functional>
 #include <numeric>
 #include <fstream>
+#include <opencv2\flann\flann.hpp>
 
 #include "ExtractFeatures.hpp"
 #include "Matching.h"
