@@ -275,7 +275,7 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> ClusterOf
 
 	centers.convertTo(centers, CV_8UC1);
 	centers.resize(a,0);
-
+	//
 	for(int i = 0; i < centers.rows; i++)
 	{
 		metaFeature.descriptors.push_back( centers.row(i) );
