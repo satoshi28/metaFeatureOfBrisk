@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ExtractFeatures.hpp"
 
-ExtractFeatures::ExtractFeatures(cv::Ptr<cv::FeatureDetector> detector, 
+ExtractFeatures::ExtractFeatures(cv::SurfFeatureDetector detector, 
     cv::Ptr<cv::DescriptorExtractor> extractor
 	)
     : m_detector(detector)
@@ -54,7 +54,7 @@ bool ExtractFeatures::extractFeatures(const cv::Mat& image, std::vector<cv::KeyP
     assert(!image.empty());
     assert(image.channels() == 1);
 
-    m_detector->detect(image, keypoints);
+    m_detector.detect(image, keypoints);
     if (keypoints.empty())
         return false;
 

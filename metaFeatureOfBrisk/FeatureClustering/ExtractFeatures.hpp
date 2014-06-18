@@ -20,7 +20,7 @@ public:
      */
     ExtractFeatures
         (
-        cv::Ptr<cv::FeatureDetector>     detector  = cv::FeatureDetector::create(detectorName), 
+        cv::SurfFeatureDetector detector = cv::SurfFeatureDetector(400), 
         cv::Ptr<cv::DescriptorExtractor> extractor = cv::FeatureDetector::create(extractorName)
         );
 
@@ -45,7 +45,7 @@ private:
 	bool extractFeatures(const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors);
 
 private:
-	cv::Ptr<cv::FeatureDetector>     m_detector;
+	cv::SurfFeatureDetector  m_detector;
     cv::Ptr<cv::DescriptorExtractor> m_extractor;
     cv::Ptr<cv::DescriptorMatcher>   m_matcher;
 
