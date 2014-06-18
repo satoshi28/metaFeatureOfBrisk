@@ -27,6 +27,9 @@ private:
 	/* DBのtb_特徴量を更新 */
 	void updateDescTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns);
 
+	/* DBのtb_特徴点を更新 */
+	void ConnectingDB::updateKeypointTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns);
+
 	/* DB更新時に発生するイベント */
 	static void OnRowUpdated(System::Object^ sender, OleDbRowUpdatedEventArgs^ e)
 	{

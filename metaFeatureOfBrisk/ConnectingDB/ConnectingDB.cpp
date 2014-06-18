@@ -15,9 +15,10 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 {
 
 	//conect
-	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\DB\\ZuBuD_1000.accdb";
+	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\DB\\sample2.accdb";
 	System::String^ strLocation ="SELECT tb_ロケーション情報.[ID],tb_ロケーション情報.[latitude], tb_ロケーション情報.[longitude] FROM tb_ロケーション情報";
 	System::String^ strDesc ="SELECT * FROM tb_特徴量";
+	System::String^ strKeypoints ="SELECT * FROM tb_特徴点";
 
 	OleDbConnection^ conn = gcnew OleDbConnection(strConn);
 	conn->Open();
@@ -35,10 +36,17 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 		OleDbDataAdapter^ descAdapter = gcnew OleDbDataAdapter(strDesc, strConn);
 		OleDbCommandBuilder^ descBuilder = gcnew OleDbCommandBuilder(descAdapter);
 
+		//特徴点の更新用
+		OleDbDataAdapter^ keypointsAdapter = gcnew OleDbDataAdapter(strKeypoints, strConn);
+		OleDbCommandBuilder^ keypointsBuilder = gcnew OleDbCommandBuilder(keypointsAdapter);
+
+
 		//tb_特徴量を更新
 		updateLocationTable(locationAdapter, patterns);
 		//tb_特徴量を更新
 		updateDescTable(descAdapter, patterns);
+		//tb_特徴点を更新
+		updateKeypointTable(keypointsAdapter, patterns);
 
 		//トランザクションをコミットします。
         transaction->Commit();
@@ -132,6 +140,33 @@ void ConnectingDB::updateDescTable(OleDbDataAdapter^ adapter, std::vector<Patter
 			}
 			//行の追加
 			table->Rows->Add(descRow);
+		}
+	}
+	//DB更新
+	adapter->Update(table);
+}
+
+void ConnectingDB::updateKeypointTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns)
+{
+	System::Data::DataTable^ table = gcnew System::Data::DataTable("keypoints");
+	adapter->Fill(table);
+
+
+
+	//新しい行の型を作成
+	System::Data::DataRow^ row;
+	for(int i = 0; i < patterns.size() ; i++)
+	{
+		for(int j = 0; j < patterns[i].keypoints.size() ; j++)
+		{
+			//新しい行の作成
+			row = table->NewRow();
+
+			row["ID"] = patterns[i].numberOfDB;
+			row["px"] = patterns[i].keypoints[j].pt.x;
+			row["py"] = patterns[i].keypoints[j].pt.y;
+			//行の追加
+			table->Rows->Add(row);
 		}
 	}
 	//DB更新

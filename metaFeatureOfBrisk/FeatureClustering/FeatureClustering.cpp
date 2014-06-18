@@ -41,9 +41,8 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	}*/
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
-
 	
-	showMetaFeatures(patterns, metaFeatures);
+	//showMetaFeatures(patterns, metaFeatures);
 	//後処理
 	patterns.clear();
 
@@ -191,6 +190,19 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 						#endif
 					}
 				}
+
+				//マッチングしたものがなかった場合
+				if(matchList.size() == 0)
+				{
+					//特徴量の行に追加
+					cluster.singleDescriptors.push_back(patterns[i].descriptors.row(k) );
+
+					#if _DEBUG
+					//特徴点を保存
+					cluster.singleKeypoints.push_back(patterns[i].keypoints.at(k) );
+					#endif
+				}
+
 			}
 			//シングル特徴量はランダムに並べ替え			
 			random_shuffle(cluster.singleKeypoints.begin(), cluster.singleKeypoints.end());
@@ -264,7 +276,7 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 		for(int k = 0; k < index.size(); k++)
 		{
 			descriptors.push_back( clusters[num].metaDescriptors.row(index[k].second) );
-			keypoints.push_back( clusters[num].singleKeypoints[index[k].second] );
+			keypoints.push_back( clusters[num].metaKeypoints[index[k].second] );
 			
 		}
 		//画像ランキング順にクラスタの特徴量を保存
@@ -359,7 +371,7 @@ void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters
 	std::vector<int> descSize;									//各descriptorsの残り特徴量数
 	int startRow = metaFeature.descriptors.rows;
 	bool isBeFilled = false;									//特徴量の割り当てが予算まで達したか
-	int total = metaFeature.descriptors.rows + 1;	
+	int total = metaFeature.descriptors.rows;	
 	int descSum = 0;
 	std::pair<bool, int>			paramOfKeypoint;
 

@@ -10,6 +10,7 @@ bool readImages(std::vector<std::string> filenames, std::vector<cv::Mat>& images
 
 int main(array<System::String ^> ^args)
 {
+
 	/* class */
 	GroupPath groupPath;
 	FeatureClustering clustering;
