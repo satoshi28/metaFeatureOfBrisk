@@ -42,7 +42,7 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 	
-	//showMetaFeatures(patterns, metaFeatures);
+	showMetaFeatures(patterns, metaFeatures);
 	//後処理
 	patterns.clear();
 
@@ -511,9 +511,9 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 			}
 		}
 		
-		cv::imshow("metaResult",metaResult);
-		cv::waitKey(0);
-		/*
+		//cv::imshow("metaResult",metaResult);
+		//cv::waitKey(0);
+		
 		static int count = 0;
 		std::stringstream ss;
 		ss << count;
@@ -522,6 +522,6 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 		result += ".jpg";
 		cv::imwrite(result,metaResult);
 		count++;
-		*/
+		
 	}
 }

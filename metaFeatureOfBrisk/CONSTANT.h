@@ -7,5 +7,5 @@ const std::string matcherName = "BruteForce-Hamming";		//マッチングアルゴリズム
 
 const int budget = 200;					//メタ特徴量のサイズ
 const bool enableMultipleRatioTest = false;	//複数比判定法を用いるか
-
+const float minRatio = 0.8f;			// To avoid NaN's when best match has zero distance we will use inversed ratio. 
 #endif

@@ -101,8 +101,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 		//マッチングを格納
 		std::vector< std::vector<cv::DMatch>> patternMatches(dataSetSize -1);
 		std::vector<cv::DMatch> tmpMatches;
-		// To avoid NaN's when best match has zero distance we will use inversed ratio. 
-		const float minRatio = 0.6f;
+		
 
 		//最近傍点の探索
 		for(int i = 0; i < dataSetSize -1 ; i++)
@@ -190,7 +189,6 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 	
 	}else
 	{
-		const float minRatio = 0.6f;
 		matches.clear();
 
 		int imgNumber = 0;
@@ -255,8 +253,10 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match)
 {
 	if(match.size() < 8)
+	{
+		match.clear();
 		return false;
-
+	}
 	std::vector<cv::Point2f>  queryPoints, trainPoints; 
 	for(int i = 0; i < match.size(); i++)
 	{
