@@ -18,7 +18,7 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 
 	if(m_enableMultipleRatioTest == true)
 	{
-		cv::Mat falseImage = cv::imread("C:\\Users\\satoshi\\Documents\\Image\\lenna.png",1);
+		cv::Mat falseImage = cv::imread("C:\\Users\\satoshi\\Documents\\Image\\falseImage.JPG",1);
 		images.push_back(falseImage);
 	}
 
@@ -39,10 +39,11 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 		showResult(patterns[i], clusters[i]);
 		cv::waitKey(0);
 	}*/
+
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 	
-	showMetaFeatures(patterns, metaFeatures);
+	//showMetaFeatures(patterns, metaFeatures);
 	//後処理
 	patterns.clear();
 

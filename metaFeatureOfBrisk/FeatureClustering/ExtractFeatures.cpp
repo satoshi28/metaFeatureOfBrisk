@@ -30,7 +30,7 @@ bool ExtractFeatures::getFeatures(std::vector<cv::Mat>& images,
 		Pattern _pattern;
 		extractFlag = extractFeatures(grayImg, _pattern.keypoints, _pattern.descriptors);
 		if(extractFlag == false)
-			return false;
+			//return false;
 
 		_pattern.image = images[i];
 

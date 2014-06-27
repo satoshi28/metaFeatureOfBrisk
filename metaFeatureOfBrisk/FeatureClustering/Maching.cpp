@@ -212,7 +212,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 				if(knnMatches[j].empty() == false)
 				{
 					 cv::DMatch& bestMatch = knnMatches[j][0];
-					const cv::DMatch& betterMatch = knnMatches[j][1];
+					 cv::DMatch& betterMatch = knnMatches[j][1];
 
 					float distanceRatio = bestMatch.distance / betterMatch.distance;
 
