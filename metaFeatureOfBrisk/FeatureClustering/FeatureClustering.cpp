@@ -38,8 +38,8 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	{
 		showResult(patterns[i], clusters[i]);
 		cv::waitKey(0);
-	}*/
-
+	}
+	*/
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 	
@@ -144,22 +144,40 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 			for(int j = 1; j < clusterMatches[i].size(); j++)
 			{
 				id = clusterMatches[i][j - 1].queryIdx;
+				cv::Mat tmpDescriptor = cv::Mat::zeros(1, cols, CV_32S);	//特徴量平均化処理用
+				cv::Mat aveDescriptor = cv::Mat::zeros(1, cols, CV_32S); 
 
-				//query番号が一致する特徴量を探す
+					//query番号が一致する特徴量を探す
 				for(int k = 0; k < clusterMatches[i].size(); k++)
 				{
 					if(id == clusterMatches[i][k].queryIdx)
 					{
+						int imgNum = clusterMatches[i][k].imgIdx;
+						int trainNum = clusterMatches[i][k].trainIdx;
+
+						patterns[imgNum].descriptors.row(trainNum).convertTo(tmpDescriptor, CV_32S);
+						aveDescriptor += tmpDescriptor;	//足し合わせ
 						rank += 1;
+
+						tmpDescriptor = cv::Mat::zeros(1, cols, CV_32S);
+						
 					}
 				}
 
 				int queryIdx = clusterMatches[i][j].queryIdx;		//queryのインデックス
 				matchList.push_back(queryIdx);						//マッチングリストにqueryの番号を保存
+				patterns[i].descriptors.row(queryIdx).convertTo(tmpDescriptor, CV_32S);
+				aveDescriptor += tmpDescriptor;	//足し合わせ
+
+				//特徴量の平均化
+				aveDescriptor /= rank+1;
+
+				cv::Mat averageDescriptor = cv::Mat::zeros(1, cols, CV_8U);
+				aveDescriptor.convertTo(averageDescriptor,CV_8U);
 
 				//特徴量の行に追加
-				cluster.metaDescriptors.push_back(patterns[i].descriptors.row(queryIdx) );
-		
+				cluster.metaDescriptors.push_back(averageDescriptor );
+
 				#if _DEBUG
 				//特徴点を保存
 				cluster.metaKeypoints.push_back(patterns[i].keypoints.at(queryIdx) );
@@ -512,8 +530,8 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 			}
 		}
 		
-		//cv::imshow("metaResult",metaResult);
-		//cv::waitKey(0);
+		cv::imshow("metaResult",metaResult);
+		cv::waitKey(0);
 		
 		static int count = 0;
 		std::stringstream ss;

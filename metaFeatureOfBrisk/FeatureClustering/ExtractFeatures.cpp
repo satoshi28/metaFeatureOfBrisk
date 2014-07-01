@@ -7,7 +7,7 @@ ExtractFeatures::ExtractFeatures(cv::SurfFeatureDetector detector,
     : m_detector(detector)
     , m_extractor(extractor)
 {
-	
+
 }
 
 ExtractFeatures::~ExtractFeatures()
