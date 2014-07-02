@@ -59,6 +59,38 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 		//Œ‹‰Ê‚ðŠi”[
 		clusterMatches.push_back(matches);
 
+		for(int j =0; j < dataSetSize; j++)
+		{
+			//ƒNƒGƒŠ‰æ‘œˆÈŠO‚ðŒP—ûƒfƒBƒXƒNƒŠƒvƒ^‚ÉŠi”[
+			if(i != j)
+			{
+				cv::Mat img1,img2,result;
+				std::vector<cv::DMatch> match;
+				img1 = patterns[i].image.clone();
+				img2 = patterns[j].image.clone();
+
+				for(int k = 0; k < matches.size();k++)
+				{
+					if(j == matches[k].imgIdx)
+					{
+						match.push_back(matches[k]);
+					}
+				}
+
+				cv::drawMatches(img1,patterns[i].keypoints,img2 ,patterns[j].keypoints, match, result);
+
+				static int count = 0;
+				std::stringstream ss;
+				ss << count;
+				std::string name = "matching";
+				name +=  ss.str();
+				name += ".jpg";
+				cv::imwrite(name,result);
+				count++;
+
+			}
+		}
+
 		//matches‚Ì‰æ‘œ”Ô†C³—p
 		imgNumberOfAdjstment++;
 	}
