@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 #include "FeatureClustering.h"
 
@@ -27,7 +26,7 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	extract.getFeatures(images,patterns);
 	// すべての画像同士をマッチングする
 	matching.getMatches(patterns, clusterMatches);
-	
+
 	std::vector<ClusterOfFeature> clusters;
 	//マッチング結果からクラスタリング特徴量を作成する
 	clusterDescriptors(clusterMatches, clusters);
@@ -42,7 +41,7 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	*/
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
-	
+
 	//showMetaFeatures(patterns, metaFeatures);
 	//後処理
 	patterns.clear();
@@ -122,13 +121,13 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 					}
 				}
 			}
-			
+
 			//clusterの最大サイズを保存
 			cluster.maxClusterSize = clusterMatches.size();
 			//保存
 			clusters.push_back(cluster);
 
-			
+
 		}
 	//ratio testによるマッチング判定
 	}else
@@ -160,7 +159,7 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 						rank += 1;
 
 						tmpDescriptor = cv::Mat::zeros(1, cols, CV_32S);
-						
+
 					}
 				}
 
@@ -296,7 +295,7 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 		{
 			descriptors.push_back( clusters[num].metaDescriptors.row(index[k].second) );
 			keypoints.push_back( clusters[num].metaKeypoints[index[k].second] );
-			
+
 		}
 		//画像ランキング順にクラスタの特徴量を保存
 		rankedDescriptors.push_back(descriptors);
@@ -308,7 +307,7 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 	//画像ランキングが高い画像の、最も多くマッチングした特徴量を優先して割り当てる処理
 	bool isBeFilled = false;
 	isBeFilled = createMetaFeature(rankedDescriptors,rankedKeypoints,imgNumbers, metaFeature);
-	
+
 	if(isBeFilled == false)
 	{
 		addSingleFeatures(clusters, imageRankingList, metaFeature);
@@ -406,7 +405,7 @@ void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters
 		for(int i = 0; i < clusters.size(); i++)
 		{
 			int num = rankingIndex[i].second;						//画像ランキング
-		
+
 			int max = total + 30;
 			for(total; total < max; total++)
 			{
@@ -422,7 +421,7 @@ void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters
 						paramOfKeypoint.second = num;
 
 						metaFeature.paramOfKeypoints.push_back(paramOfKeypoint);						//keypointのパラメータを保存
-						
+
 						metaFeature.descriptors.push_back( clusters[num].singleDescriptors.row(descSize[num]) );
 						metaFeature.keypoints.push_back(clusters[num].singleKeypoints[ descSize[num] ] );
 						descSize[num] += 1;
@@ -529,10 +528,10 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 
 			}
 		}
-		
+
 		cv::imshow("metaResult",metaResult);
 		cv::waitKey(0);
-		
+
 		static int count = 0;
 		std::stringstream ss;
 		ss << count;
@@ -541,6 +540,6 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 		result += ".jpg";
 		cv::imwrite(result,metaResult);
 		count++;
-		
+
 	}
 }

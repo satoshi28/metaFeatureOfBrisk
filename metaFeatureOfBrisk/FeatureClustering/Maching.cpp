@@ -52,7 +52,7 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 
 		//trainデータをmatchersに追加
 		train(trainDescriptors, matchers);
-		
+
 		// Get matches
 		match( queryKeypoints, queryDescriptors,trainKeypoints,  matchers, matches);
 
@@ -101,7 +101,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 		//マッチングを格納
 		std::vector< std::vector<cv::DMatch>> patternMatches(dataSetSize -1);
 		std::vector<cv::DMatch> tmpMatches;
-		
+
 
 		//最近傍点の探索
 		for(int i = 0; i < dataSetSize -1 ; i++)
@@ -121,7 +121,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 
 			//初期化
 			knnMatches.clear();
-			
+
 		}
 
 		//クエリ特徴点の数までループ
@@ -142,12 +142,12 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 
 			for(size_t i=0; i< dataSetSize - 1 ; i++)
 			{
-				
+
 				if(worstId != i)
 				{
 					cv::DMatch& currentMatch   =patternMatches[i][j];
 					float distanceRatio = currentMatch.distance / worstdistance;
-					
+
 					// Pass only matches where distance ratio between 
 					// nearest matches is greater than 1.5 (distinct criteria)
 					if (distanceRatio < minRatio)
@@ -171,7 +171,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 					correctMatches[i].push_back(tmpMatches[j]);
 			}
 		}
-		
+
 		for(int i = 0; i < dataSetSize -1; i++)
 		{
 			//幾何学的整合性チェック
@@ -186,7 +186,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 			}
 		}
 
-	
+
 	}else
 	{
 		matches.clear();
@@ -246,7 +246,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 			correctMatches.clear();
 			imgNumber++;
 		}
-		
+
 	}
 }
 
