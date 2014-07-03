@@ -17,7 +17,7 @@ int main(array<System::String ^> ^args)
 	ConnectingDB db;
 	exifGps gps;
 	/* •Ï”éŒ¾ */
-	String^ folder = "C:\\Users\\satoshi\\Documents\\Image\\caltech\\database\\";
+	String^ folder = "C:\\Users\\satoshi\\Documents\\Image\\ZuBuD\\database";
 	std::vector< std::vector<std::string> > sortFile;
 	std::vector<std::vector<Pattern>> matches;
 
