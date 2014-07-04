@@ -35,17 +35,17 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	//
 	std::cout << "OK" << std::endl;
 	
-	/*
+	
 	for(int i = 0; i < patterns.size(); i++)
 	{
 		showResult(patterns[i], clusters[i]);
-		cv::waitKey(0);
+		//cv::waitKey(0);
 	}
-	*/
+	
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 	
-	//showMetaFeatures(patterns, metaFeatures);
+	showMetaFeatures(patterns, metaFeatures);
 	//後処理
 	patterns.clear();
 
@@ -139,6 +139,7 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 		for(int i = 0; i < clusterMatches.size(); i++)
 		{
 			int cols = patterns[i].descriptors.cols;
+
 			rank = 0;
 			//処理用変数
 			ClusterOfFeature cluster;
@@ -159,7 +160,7 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 
 				bool isBeFind = false;
 				int queryIdx = clusterMatches[i][j-1].queryIdx;		//queryのインデックス
-
+				
 				for(int k=0; k < matchList.size(); k++)
 				{
 					if(matchList[k] == queryIdx)
@@ -184,7 +185,8 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 				rank = 0;
 			}
 
-			//std::sort(matchList.begin(), matchList.end());
+			//リストの並び替え
+			std::sort(matchList.begin(), matchList.end());
 
 			//単体の特徴量をsingleDescriptorsに保存
 			for(int k = 0; k < patterns[i].descriptors.rows; k++)
@@ -249,12 +251,25 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 	//画像のランク付け
 	for(int i = 0; i < clusters.size(); i++)
 	{
-		int rank = clusters[i].rankingList.size();					//画像のランク
+		int rank = 0;					//画像のランク
+		std::vector<int> tmpList = clusters[i].rankingList;
+
+		std::sort(tmpList.begin(), tmpList.end(),std::greater<int>() );
+		
+		int num = 1;
+
 		std::pair<int , int> list;
 
-		for(int j = 0; j < clusters[i].rankingList.size(); j++)
+		for(int j = 1; j < tmpList.size(); j++)
 		{
-			rank += clusters[i].rankingList[j];
+			if(tmpList[j-1] == tmpList[j])
+			{
+				num++;
+			}else
+			{
+				rank += tmpList[j-1]*num;
+				num=1;
+			}
 		}
 
 		list.first = rank;
@@ -453,9 +468,6 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 	cv::Mat clusteringResult;
 	clusteringResult = pattern.image.clone();
 
-	std::cout << cluster.metaDescriptors.size() << std::endl;
-	std::cout << cluster.singleDescriptors.size() << std::endl;
-
 	std::cout << "---------------"<< std::endl;
 
 	for(int i = 0; i < cluster.metaKeypoints.size(); i++)
@@ -495,14 +507,14 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 		cv::circle(clusteringResult, cluster.singleKeypoints[i].pt , 1, cv::Scalar(0,0,0),2, CV_FILLED);
 	}
 	*/
-	cv::imshow("clusterinResult",clusteringResult);
+	//cv::imshow("clusterinResult",clusteringResult);
 	
 	static int count = 0;
 	std::stringstream ss;
 	ss << count;
-	std::string result = "result";
+	std::string result = "matchingResult";
 	result +=  ss.str();
-	result += ".jpg";
+	result += ".png";
 	cv::imwrite(result,clusteringResult);
 	count++;
 	
@@ -533,9 +545,9 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 		static int count = 0;
 		std::stringstream ss;
 		ss << count;
-		std::string result = "result";
+		std::string result = "metaResult";
 		result +=  ss.str();
-		result += ".jpg";
+		result += ".png";
 		cv::imwrite(result,metaResult);
 		count++;
 		
