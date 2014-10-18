@@ -35,12 +35,12 @@ private:
 	bool createMetaFeature(std::vector<cv::Mat> rankedDescriptors,std::vector< std::vector<cv::KeyPoint>> rankedKeypoints,std::vector<int> imgNumbers, Pattern& metaFeature);
 
 	void addSingleFeatures(std::vector<ClusterOfFeature> clusters,std::vector<std::pair<int, int>> rankingIndex,Pattern& metaFeature);
-#if _DEBUG
+
 	/* “Á’¥—Ê‚ð•`‰æ */
 	void showResult(Pattern pattern, ClusterOfFeature cluster);
 
 	void showMetaFeatures(std::vector<Pattern> patterns,Pattern metaFeature);
-#endif
+
 
 private:
 	int m_budget;

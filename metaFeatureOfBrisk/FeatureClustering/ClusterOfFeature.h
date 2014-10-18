@@ -13,10 +13,10 @@ struct ClusterOfFeature
 	std::vector<int>	rankingList;
 	cv::Mat			metaDescriptors;
 	cv::Mat			singleDescriptors;
-#if _DEBUG
+
   std::vector<cv::KeyPoint> metaKeypoints;
   std::vector<cv::KeyPoint> singleKeypoints;
-#endif
+
 
 };
 #endif

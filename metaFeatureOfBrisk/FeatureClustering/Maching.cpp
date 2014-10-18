@@ -58,7 +58,7 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 
 		//Œ‹‰Ê‚ðŠi”[
 		clusterMatches.push_back(matches);
-		/*
+		
 		//ƒ}ƒbƒ`ƒ“ƒOŒ‹‰Ê‚Ì•\Ž¦
 		for(int j =0; j < dataSetSize; j++)
 		{
@@ -90,7 +90,7 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 				count++;
 
 			}
-		}*/
+		}
 
 		//matches‚Ì‰æ‘œ”Ô†C³—p
 		imgNumberOfAdjstment++;

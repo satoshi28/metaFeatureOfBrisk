@@ -39,9 +39,9 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	for(int i = 0; i < patterns.size(); i++)
 	{
 		showResult(patterns[i], clusters[i]);
-		cv::waitKey(0);
-	}
-	*/
+		//cv::waitKey(0);
+	}*/
+	
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 	
@@ -90,11 +90,8 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 					//特徴量の行に追加
 					cluster.metaDescriptors.push_back(patterns[i].descriptors.row(queryIdx) );
 
-
-					#if _DEBUG
 					//特徴点を保存
 					cluster.metaKeypoints.push_back(patterns[i].keypoints.at(queryIdx) );
-					#endif
 
 					//特徴量のランクを保存
 					cluster.rankingList.push_back(rank);
@@ -117,10 +114,8 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 						//特徴量の行に追加
 						cluster.singleDescriptors.push_back( patterns[i].descriptors.row(k) );
 
-						#if _DEBUG
 						//特徴点を保存
 						cluster.singleKeypoints.push_back(patterns[i].keypoints.at(k) );
-						#endif
 					}
 				}
 			}
@@ -144,9 +139,9 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 			ClusterOfFeature cluster;
 			matchList.clear();
 
-			for(int j = 1; j < clusterMatches[i].size(); j++)
+			for(int j = 0; j < clusterMatches[i].size(); j++)
 			{
-				id = clusterMatches[i][j - 1].queryIdx;
+				id = clusterMatches[i][j].queryIdx;
 
 				//query番号が一致する特徴量を探す
 				for(int k = 0; k < clusterMatches[i].size(); k++)
@@ -158,7 +153,7 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 				}
 
 				bool isBeFind = false;
-				int queryIdx = clusterMatches[i][j-1].queryIdx;		//queryのインデックス
+				int queryIdx = clusterMatches[i][j].queryIdx;		//queryのインデックス
 
 				for(int k=0; k < matchList.size(); k++)
 				{
@@ -173,10 +168,8 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 					//特徴量の行に追加
 					cluster.metaDescriptors.push_back(patterns[i].descriptors.row(queryIdx) );
 		
-					#if _DEBUG
 					//特徴点を保存
 					cluster.metaKeypoints.push_back(patterns[i].keypoints.at(queryIdx) );
-					#endif
 
 					//特徴量のランクを保存
 					cluster.rankingList.push_back(rank);
@@ -185,6 +178,7 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 			}
 
 			//std::sort(matchList.begin(), matchList.end());
+
 
 			//単体の特徴量をsingleDescriptorsに保存
 			for(int k = 0; k < patterns[i].descriptors.rows; k++)
@@ -200,10 +194,8 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 						//特徴量の行に追加
 						cluster.singleDescriptors.push_back(patterns[i].descriptors.row(k) );
 
-						#if _DEBUG
 						//特徴点を保存
 						cluster.singleKeypoints.push_back(patterns[i].keypoints.at(k) );
-						#endif
 					}
 				}
 
@@ -213,15 +205,13 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 					//特徴量の行に追加
 					cluster.singleDescriptors.push_back(patterns[i].descriptors.row(k) );
 
-					#if _DEBUG
 					//特徴点を保存
 					cluster.singleKeypoints.push_back(patterns[i].keypoints.at(k) );
-					#endif
 				}
 
 			}
 			//シングル特徴量はランダムに並べ替え			
-			random_shuffle(cluster.singleKeypoints.begin(), cluster.singleKeypoints.end());
+			//random_shuffle(cluster.singleKeypoints.begin(), cluster.singleKeypoints.end());
 
 			//clusterの最大サイズを保存
 			cluster.maxClusterSize = clusterMatches.size();
@@ -332,7 +322,7 @@ bool FeatureClustering::createMetaFeature(std::vector<cv::Mat> rankedDescriptors
 	{
 		for(int i = 0; i < rankedDescriptors.size(); i++)
 		{
-			int max = total + 30;
+			int max = total + 200;
 			for(total; total < max; total++)
 			{
 				if(descSize[i] < rankedDescriptors[i].rows )
@@ -453,11 +443,6 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 	cv::Mat clusteringResult;
 	clusteringResult = pattern.image.clone();
 
-	std::cout << cluster.metaDescriptors.size() << std::endl;
-	std::cout << cluster.singleDescriptors.size() << std::endl;
-
-	std::cout << "---------------"<< std::endl;
-
 	for(int i = 0; i < cluster.metaKeypoints.size(); i++)
 	{//white
 		switch (cluster.rankingList[i])
@@ -495,14 +480,14 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 		cv::circle(clusteringResult, cluster.singleKeypoints[i].pt , 1, cv::Scalar(0,0,0),2, CV_FILLED);
 	}
 	*/
-	cv::imshow("clusterinResult",clusteringResult);
+	//cv::imshow("clusterinResult",clusteringResult);
 	
 	static int count = 0;
 	std::stringstream ss;
 	ss << count;
-	std::string result = "result";
+	std::string result = "matchingResult";
 	result +=  ss.str();
-	result += ".jpg";
+	result += ".png";
 	cv::imwrite(result,clusteringResult);
 	count++;
 	
@@ -514,30 +499,35 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 	{
 		cv::Mat metaResult;
 		metaResult = patterns[i].image.clone();
+		int metaFeaturesSize =0;
+
 
 		for(int j = 0; j < metaFeature.paramOfKeypoints.size(); j++)
 		{
 			if(metaFeature.paramOfKeypoints[j].second == i)
 			{
 				if(metaFeature.paramOfKeypoints[j].first == true)//複数の画像で見つかったか
-					cv::circle(metaResult,metaFeature.keypoints[j].pt , 2, cv::Scalar(0,0,255),2, CV_FILLED);
+					cv::circle(metaResult,metaFeature.keypoints[j].pt , 4, cv::Scalar(0,0,255),-1, CV_AA);
 				else													//シングルの特徴
-					cv::circle(metaResult,metaFeature.keypoints[j].pt , 1, cv::Scalar(0,0,0),2, CV_FILLED);
+					cv::circle(metaResult,metaFeature.keypoints[j].pt , 4, cv::Scalar(0,0,0),-1, CV_AA);
+
+				metaFeaturesSize++;
 
 			}
 		}
 		
-		//cv::imshow("metaResult",metaResult);
-		//cv::waitKey(0);
-		
+		cv::imshow("metaResult",metaResult);
+		std::cout << metaFeaturesSize << std::endl;
+		cv::waitKey(0);
+		/*
 		static int count = 0;
 		std::stringstream ss;
 		ss << count;
-		std::string result = "result";
+		std::string result = "metaResult";
 		result +=  ss.str();
-		result += ".jpg";
+		result += ".png";
 		cv::imwrite(result,metaResult);
 		count++;
-		
+		*/
 	}
 }
