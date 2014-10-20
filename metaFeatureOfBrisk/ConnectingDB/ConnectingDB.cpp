@@ -15,30 +15,31 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 {
 
 	//conect
-	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\DB\\test.accdb";
-	System::String^ strLocation ="SELECT tb_ロケーション情報.[ID],tb_ロケーション情報.[latitude], tb_ロケーション情報.[longitude] FROM tb_ロケーション情報";
+	System::String^ strConn = "userid=root;password=raiden01;database=test001;Host=localhost";
+	System::String^ strLocation ="SELECT * FROM tb_ロケーション情報";
 	System::String^ strDesc ="SELECT * FROM tb_特徴量";
 	System::String^ strKeypoints ="SELECT * FROM tb_特徴点";
 
-	OleDbConnection^ conn = gcnew OleDbConnection(strConn);
+
+	MySqlConnection^ conn = gcnew MySqlConnection(strConn);
 	conn->Open();
 
 
 
 	//トランザクションの開始
-	OleDbTransaction^ transaction = conn->BeginTransaction(System::Data::IsolationLevel::ReadCommitted);
+	MySqlTransaction^ transaction = conn->BeginTransaction(System::Data::IsolationLevel::ReadCommitted);
 	try{
 		//ロケーション情報の更新用
-		OleDbDataAdapter^ locationAdapter = gcnew OleDbDataAdapter(strLocation, strConn);
-		OleDbCommandBuilder^ builder = gcnew OleDbCommandBuilder(locationAdapter);
+		MySqlDataAdapter^ locationAdapter = gcnew MySqlDataAdapter(strLocation, strConn);
+		MySqlCommandBuilder^ locationBuilder = gcnew MySqlCommandBuilder(locationAdapter);
 
 		//特徴量の更新用
-		OleDbDataAdapter^ descAdapter = gcnew OleDbDataAdapter(strDesc, strConn);
-		OleDbCommandBuilder^ descBuilder = gcnew OleDbCommandBuilder(descAdapter);
+		MySqlDataAdapter^ descAdapter = gcnew MySqlDataAdapter(strDesc, strConn);
+		MySqlCommandBuilder^ descBuilder = gcnew MySqlCommandBuilder(descAdapter);
 
 		//特徴点の更新用
-		OleDbDataAdapter^ keypointsAdapter = gcnew OleDbDataAdapter(strKeypoints, strConn);
-		OleDbCommandBuilder^ keypointsBuilder = gcnew OleDbCommandBuilder(keypointsAdapter);
+		MySqlDataAdapter^ keypointsAdapter = gcnew MySqlDataAdapter(strKeypoints, strConn);
+		MySqlCommandBuilder^ keypointsBuilder = gcnew MySqlCommandBuilder(keypointsAdapter);
 
 
 		//tb_特徴量を更新
@@ -46,17 +47,17 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 		//tb_特徴量を更新
 		updateDescTable(descAdapter, patterns);
 		//tb_特徴点を更新
-		updateKeypointTable(keypointsAdapter, patterns);
+		//updateKeypointTable(keypointsAdapter, patterns);
 
 		//トランザクションをコミットします。
         transaction->Commit();
 
 		return 0;
 	}
-	catch(System::Exception^){
+	catch(MySqlException^ ex){
 		//トランザクションのロールバック
 		transaction->Rollback();
-
+		System::Console::WriteLine(ex->Message);
 		return -1;
 	}
 	finally
@@ -77,7 +78,7 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 */
 }
 
-void ConnectingDB::updateLocationTable(OleDbDataAdapter^ adapter, std::vector<Pattern>& patterns)
+void ConnectingDB::updateLocationTable(MySqlDataAdapter^ adapter, std::vector<Pattern>& patterns)
 {
 	//取得用データテーブル
 	System::Data::DataTable^ table = gcnew System::Data::DataTable("data");
@@ -105,7 +106,7 @@ void ConnectingDB::updateLocationTable(OleDbDataAdapter^ adapter, std::vector<Pa
 
 	//DBの更新
 	//オートナンバー取得用にupdateイベントを有効化
-	adapter->RowUpdated += gcnew OleDbRowUpdatedEventHandler(OnRowUpdated);
+	adapter->RowUpdated += gcnew MySqlRowUpdatedEventHandler(OnRowUpdated);
 	adapter->Update(dataChanges);
 
 	//オートナンバーをPatternsに保存
@@ -116,7 +117,7 @@ void ConnectingDB::updateLocationTable(OleDbDataAdapter^ adapter, std::vector<Pa
 	}
 }
 
-void ConnectingDB::updateDescTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns)
+void ConnectingDB::updateDescTable(MySqlDataAdapter^ adapter, std::vector<Pattern> patterns)
 {
 	System::Data::DataTable^ table = gcnew System::Data::DataTable("descriptors");
 	adapter->Fill(table);
@@ -146,7 +147,7 @@ void ConnectingDB::updateDescTable(OleDbDataAdapter^ adapter, std::vector<Patter
 	adapter->Update(table);
 }
 
-void ConnectingDB::updateKeypointTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns)
+void ConnectingDB::updateKeypointTable(MySqlDataAdapter^ adapter, std::vector<Pattern> patterns)
 {
 	System::Data::DataTable^ table = gcnew System::Data::DataTable("keypoints");
 	adapter->Fill(table);

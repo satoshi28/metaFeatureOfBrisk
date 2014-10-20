@@ -100,4 +100,10 @@
       <Filter>リソース ファイル</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="SQLiteAsync.cs" />
+    <None Include="SQLite.cs" />
+    <None Include="app.config" />
+  </ItemGroup>
 </Project>
