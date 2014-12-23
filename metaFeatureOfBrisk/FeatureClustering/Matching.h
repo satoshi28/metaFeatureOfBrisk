@@ -26,6 +26,7 @@ public:
     */
 	void getMatches(const std::vector<Pattern> patterns, std::vector< std::vector<cv::DMatch> >& matches);
 
+	std::vector<std::vector<cv::Mat>> Matching::getHomography();
 private:	
 	//テンプレート画像からPatternを作成
 	void train(const std::vector<cv::Mat> trainDescriptors, std::vector<cv::Ptr<cv::DescriptorMatcher> >& matchers );
@@ -33,7 +34,7 @@ private:
 	void match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescriptors,std::vector<std::vector<cv::KeyPoint>> trainKeypoints,  std::vector<cv::Ptr<cv::DescriptorMatcher> >& matchers, std::vector<cv::DMatch>& matches);
 
 	//幾何学的整合性チェック
-	bool geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match);
+	bool geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match,  cv::Mat& homography);
 private:
     
 	//画像セットの数
@@ -43,6 +44,7 @@ private:
 
 	int imgNumberOfAdjstment;
 
+	std::vector<std::vector<cv::Mat>> AllHomographyes;
 };
 
 

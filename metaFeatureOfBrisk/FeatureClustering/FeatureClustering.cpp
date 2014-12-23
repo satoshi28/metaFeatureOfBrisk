@@ -15,6 +15,7 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	Matching matching(m_enableMultipleRatioTest);
 
 	std::vector< std::vector<cv::DMatch> > clusterMatches;
+	
 
 	if(m_enableMultipleRatioTest == true)
 	{
@@ -28,6 +29,7 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	// すべての画像同士をマッチングする
 	matching.getMatches(patterns, clusterMatches);
 
+	homographyes = matching.getHomography();
 
 	std::vector<ClusterOfFeature> clusters;
 	//マッチング結果からクラスタリング特徴量を作成する
@@ -39,9 +41,9 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	for(int i = 0; i < patterns.size(); i++)
 	{
 		showResult(patterns[i], clusters[i]);
-		//cv::waitKey(0);
-	}*/
-	
+		cv::waitKey(0);
+	}
+	*/
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, metaFeatures);
 	
@@ -256,6 +258,15 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 	//画像のランキングに基づいて降順に並び替え
 	std::sort(imageRankingList.begin(), imageRankingList.end(),std::greater<std::pair<int, int>>() );
 
+	/* 
+	* 最高ランクのクラスタ(Imax)の画像に，各クラスタの特徴点を投影
+	* 同じ位置に来た特徴点のclusterサイズをもとの特徴点のクラスタサイズに加算
+	* inlinerとして取り除かれた特徴点はImaxに新規に作成，クラスタサイズはそのまま
+	* step2は先にやっとく
+	* クラスタサイズが高いものからメタ特徴量に割り当てる
+	*/
+	clusterToMetaFeature(clusters, homographyes, imageRankingList[0].second, metaFeature);
+
 	//-----------------step 2 --------------------------------------------//
 
 	//下準備、各clusterのmetaDescriptorsをclusterサイズ(マッチングした数)に基づいて降順に並び替え
@@ -322,7 +333,7 @@ bool FeatureClustering::createMetaFeature(std::vector<cv::Mat> rankedDescriptors
 	{
 		for(int i = 0; i < rankedDescriptors.size(); i++)
 		{
-			int max = total + 200;
+			int max = total + 30;
 			for(total; total < max; total++)
 			{
 				if(descSize[i] < rankedDescriptors[i].rows )
@@ -474,14 +485,14 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 
 		cv::putText(clusteringResult, rank, cluster.metaKeypoints[i].pt, cv::FONT_HERSHEY_SIMPLEX, 0.3, cv::Scalar(255,255,255), 1, CV_AA);
 	}
-	/*
+	
 	for(int i = 0; i < cluster.singleKeypoints.size(); i++)
 	{//black
 		cv::circle(clusteringResult, cluster.singleKeypoints[i].pt , 1, cv::Scalar(0,0,0),2, CV_FILLED);
 	}
-	*/
-	//cv::imshow("clusterinResult",clusteringResult);
 	
+	cv::imshow("clusterinResult",clusteringResult);
+	/*
 	static int count = 0;
 	std::stringstream ss;
 	ss << count;
@@ -490,6 +501,7 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 	result += ".png";
 	cv::imwrite(result,clusteringResult);
 	count++;
+	*/
 	
 }
 
@@ -530,4 +542,108 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 		count++;
 		*/
 	}
+}
+
+void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clusters,std::vector<std::vector<cv::Mat>> homographyes, int basisImgNum, Pattern& metaFeature)
+{
+	//基準のクラスタ
+	ClusterOfFeature basisCluster;
+	basisCluster = clusters[basisImgNum];
+
+	std::vector<ClusterOfFeature> transformedClusters;
+	
+	for(int i = 0; i < clusters.size(); i++)
+	{
+		//基準の場合は飛ばす
+		if(i == basisImgNum) continue;
+
+		//マッチングの際推定したホモグラフィの取得
+		cv::Mat homography;
+		if(clusters.size() -1 == basisImgNum)	//
+		{
+			homography = homographyes[i][basisImgNum - 1];
+		}
+		else
+		{
+			homography = homographyes[i][basisImgNum];
+		}
+
+		//ゼロ行列か判定
+		cv::Mat tmp1,tmp2;
+		cv::reduce(homography, tmp1, 1, CV_REDUCE_SUM);
+		cv::reduce(tmp1, tmp2, 0, CV_REDUCE_SUM);
+		if(tmp2.at<double>(0,0) == 0.0) continue;
+
+
+
+		std::cout << homography << std::endl;
+
+		double mm[3][3];
+		for(int j = 0; j < 3; j++)
+		{
+			for(int k = 0; k < 3; k++)
+			{
+				mm[j][k] = homography.at<double>(j,k);
+				std::cout << mm[j][k] << std::endl;
+			}
+		}
+
+		ClusterOfFeature transformedCluster;
+		transformedCluster = clusters[i];
+
+		for(int j = 0; j < transformedCluster.metaKeypoints.size(); j++)
+		{
+			double x = transformedCluster.metaKeypoints[j].pt.x;
+			double y = transformedCluster.metaKeypoints[j].pt.y;
+
+			double t_x = (mm[0][0]*x + mm[0][1]*y + mm[0][2])/(mm[2][0]*x + mm[2][1] + mm[2][2]);
+			double t_y = (mm[1][0]*x + mm[1][1]*y + mm[1][2])/(mm[2][0]*x + mm[2][1] + mm[2][2]);
+
+			transformedCluster.metaKeypoints[j].pt.x = t_x;
+			transformedCluster.metaKeypoints[j].pt.y = t_y;
+
+		}
+
+		for(int j = 0; j < transformedCluster.singleKeypoints.size(); j++)
+		{
+			double x = transformedCluster.singleKeypoints[j].pt.x;
+			double y = transformedCluster.singleKeypoints[j].pt.y;
+
+			double t_x = (mm[0][0]*x + mm[0][1]*y + mm[0][2])/(mm[2][0]*x + mm[2][1] + mm[2][2]);
+			double t_y = (mm[1][0]*x + mm[1][1]*y + mm[1][2])/(mm[2][0]*x + mm[2][1] + mm[2][2]);
+
+			transformedCluster.singleKeypoints[j].pt.x = t_x;
+			transformedCluster.singleKeypoints[j].pt.y = t_y;
+
+		}
+
+		cv::Mat resultImg = patterns[basisImgNum].image.clone();
+
+		for(int i = 0; i < basisCluster.metaKeypoints.size(); i++)
+		{//white
+			cv::circle(resultImg, basisCluster.metaKeypoints[i].pt , 2, cv::Scalar(0,0,255),2, CV_FILLED);
+		}
+		
+		for(int i = 0; i < transformedCluster.metaKeypoints.size(); i++)
+		{//white
+			cv::circle(resultImg, basisCluster.metaKeypoints[i].pt , 1, cv::Scalar(255,0,0),2, CV_FILLED);
+		}
+
+		
+		static int count = 0;
+		std::stringstream ss;
+		ss << count;
+		std::string result = "matchingPoint";
+		result +=  ss.str();
+		result += ".png";
+		cv::imwrite(result,resultImg);
+		count++;
+		
+/*
+		cv::imshow("result",resultImg);
+		cv::waitKey(0);
+	*/}
+
+
+
 }

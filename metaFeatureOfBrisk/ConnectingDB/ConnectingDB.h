@@ -33,6 +33,9 @@ private:
 	/* DBのtb_特徴点を更新 */
 	void ConnectingDB::updateKeypointTable(MySqlDataAdapter^ adapter, std::vector<Pattern> patterns);
 
+	/* DBのtb_informationを更新 */
+	void ConnectingDB::updateInfoTable(MySqlDataAdapter^ adapter, std::vector<Pattern>& patterns);
+
 	/* DB更新時に発生するイベント */
 	static void  OnRowUpdated(System::Object^ sender, MySqlRowUpdatedEventArgs^ e)
 	{

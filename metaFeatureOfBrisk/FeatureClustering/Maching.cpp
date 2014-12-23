@@ -204,7 +204,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 					correctMatches[i].push_back(tmpMatches[j]);
 			}
 		}
-		
+		/*
 		for(int i = 0; i < dataSetSize -1; i++)
 		{
 			//幾何学的整合性チェック
@@ -217,14 +217,15 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 					matches.push_back(correctMatches[i][k]);
 				}
 			}
-		}
+		}*/
 
 	
 	}else
 	{
 		matches.clear();
-
 		int imgNumber = 0;
+
+		std::vector<cv::Mat> homographyes;
 
 		//最近傍点の探索
 		for(int i = 0; i < dataSetSize -1 ; i++)
@@ -261,9 +262,9 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 					}
 				}
 			}
-
+			cv::Mat homography;
 			//幾何学的整合性チェック
-			bool passFlag = geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches);
+			bool passFlag = geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches, homography);
 
 			//幾何学的整合性チェックに通過したもののみ登録する
 			if(passFlag == true){
@@ -272,7 +273,15 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 				{
 					matches.push_back(correctMatches[k]);
 				}
+				//ホモグラフィ行列を保存
+				homographyes.push_back(homography);
+			}else
+			{
+				//ホモグラフィ行列が推定できなかった場合は単位行列を格納
+				cv::Mat eye = cv::Mat::zeros(3, 3, CV_64FC1); // 単位行列を生成
+				homographyes.push_back(eye);
 			}
+			
 
 			//初期化
 			knnMatches.clear();
@@ -280,10 +289,11 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 			imgNumber++;
 		}
 		
+		AllHomographyes.push_back(homographyes);
 	}
 }
 
-bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match)
+bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match, cv::Mat& homography)
 {
 	if(match.size() < 8)
 	{
@@ -301,7 +311,7 @@ bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 	std::vector<unsigned char> inliersMask(queryPoints.size() );
 
 	//幾何学的整合性チェックによって当たり値を抽出
-	cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 10, inliersMask);
+	homography = cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 10, inliersMask);
 
 	std::vector<cv::DMatch> inliers;
 	for(size_t i =0 ; i < inliersMask.size(); i++)
@@ -312,4 +322,9 @@ bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 
 	match.swap(inliers);
 	return true;
+}
+
+std::vector<std::vector<cv::Mat>> Matching::getHomography()
+{
+	return AllHomographyes;
 }

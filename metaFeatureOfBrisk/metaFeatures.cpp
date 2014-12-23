@@ -17,7 +17,7 @@ int main(array<System::String ^> ^args)
 	ConnectingDB db;
 	exifGps gps;
 	/* •Ï”éŒ¾ */
-	String^ folder = "C:\\Users\\satoshi\\Documents\\Image\\hiraizumi\\database";
+	String^ folder = "C:\\Users\\satoshi\\Documents\\Image\\ZuBuD\\database\\";
 	std::vector< std::vector<std::string> > sortFile;
 	std::vector<std::vector<Pattern>> matches;
 
@@ -38,11 +38,16 @@ int main(array<System::String ^> ^args)
 		//ƒƒ^“Á’¥—Ê‚Ìì¬
 		clustering.clusterFeatures(images, metaFeatures[i]);
 
+		//‰æ‘œ‚Ì“o˜^
+		cv::Mat img;
+		cv::resize(images[0], img,cv::Size(320,240));
+		metaFeatures[i].image = img;
+
 		//std::cout << metaFeature.descriptors << std::endl;
 		std::cout << "-----------------" << std::endl;
 	}
 
-	db.updateDB(metaFeatures);
+	//db.updateDB(metaFeatures);
 	
 	return 0;
 }

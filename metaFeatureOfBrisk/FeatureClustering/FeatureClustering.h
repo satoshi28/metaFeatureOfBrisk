@@ -41,11 +41,12 @@ private:
 
 	void showMetaFeatures(std::vector<Pattern> patterns,Pattern metaFeature);
 
-
+	void clusterToMetaFeature(std::vector<ClusterOfFeature> clusters,std::vector<std::vector<cv::Mat>> homographyes, int basisImgNum, Pattern& metaFeature);
 private:
 	int m_budget;
 	bool m_enableMultipleRatioTest;
 	std::vector<Pattern> patterns;
+	std::vector< std::vector<cv::Mat> > homographyes;
 
 };
 

@@ -15,11 +15,11 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 {
 
 	//conect
-	System::String^ strConn = "userid=root;password=raiden01;database=test001;Host=localhost";
-	System::String^ strLocation ="SELECT * FROM tb_ロケーション情報";
-	System::String^ strDesc ="SELECT * FROM tb_特徴量";
-	System::String^ strKeypoints ="SELECT * FROM tb_特徴点";
-
+	System::String^ strConn = "userid=root;password=root;database=objectdatabase;Host=localhost";
+	System::String^ strLocation ="SELECT * FROM tb_location";
+	System::String^ strDesc ="SELECT * FROM tb_descriptors";
+	System::String^ strKeypoints ="SELECT * FROM tb_keypoints";
+	System::String^ strInfo ="SELECT * FROM tb_information";
 
 	MySqlConnection^ conn = gcnew MySqlConnection(strConn);
 	conn->Open();
@@ -41,14 +41,20 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 		MySqlDataAdapter^ keypointsAdapter = gcnew MySqlDataAdapter(strKeypoints, strConn);
 		MySqlCommandBuilder^ keypointsBuilder = gcnew MySqlCommandBuilder(keypointsAdapter);
 
+		//情報の更新用
+		MySqlDataAdapter^ infoAdapter = gcnew MySqlDataAdapter(strInfo, strConn);
+		MySqlCommandBuilder^ infoBuilder = gcnew MySqlCommandBuilder(infoAdapter);
 
+		/*
 		//tb_特徴量を更新
 		updateLocationTable(locationAdapter, patterns);
 		//tb_特徴量を更新
 		updateDescTable(descAdapter, patterns);
 		//tb_特徴点を更新
-		//updateKeypointTable(keypointsAdapter, patterns);
-
+		updateKeypointTable(keypointsAdapter, patterns);
+		*/
+		//tb_informationを更新
+		updateInfoTable(infoAdapter, patterns);
 		//トランザクションをコミットします。
         transaction->Commit();
 
@@ -173,6 +179,56 @@ void ConnectingDB::updateKeypointTable(MySqlDataAdapter^ adapter, std::vector<Pa
 	//DB更新
 	adapter->Update(table);
 }
+
+
+void ConnectingDB::updateInfoTable(MySqlDataAdapter^ adapter, std::vector<Pattern>& patterns)
+{
+	System::Data::DataTable^ table = gcnew System::Data::DataTable("info");
+	adapter->Fill(table);
+
+	//新しい行の型を作成
+	System::Data::DataRow^ row;
+	for(int i = 0; i < patterns.size() ; i++)
+	{
+		//新しい行の作成
+		row = table->NewRow();
+		/*
+		unsigned char*  data = patterns[i].image.data;
+		int len = strlen((char*)data);
+		
+		array<unsigned char>^ byteArray = gcnew array<unsigned char>(len);
+		// convert native pointer to System::IntPtr with C-Style cast
+		System::Runtime::InteropServices::Marshal::Copy((System::IntPtr)data,byteArray, 0, len);
+	
+		row["ID"] = i+1;
+		row["image"] =  byteArray; 
+		*/
+		//int number = patterns[i].numberOfDB;
+		int number = i+1;
+		
+		std::stringstream ss;
+		ss <<number;
+		std::string result = "C:\\Apache2.2\\htdocs\\images\\";
+		std::string name =  ss.str();
+		name += ".jpg";
+
+		result += name;
+
+		cv::imwrite( result, patterns[i].image);
+
+		std::string path = "http://localhost/images/" + name;
+		System::String^ str = gcnew System::String(path.c_str());
+		row["ID"] = number;
+		row["imageID"] = str;
+
+		//行の追加
+		table->Rows->Add(row);
+		
+	}
+	//DB更新
+	adapter->Update(table);
+}
+
 
 void ConnectingDB::SaveToCSV(System::Data::DataTable^ dt, System::String^ fileName, bool hasHeader, System::String^ separator, System::String^ quote, System::String^ replace)
 {
