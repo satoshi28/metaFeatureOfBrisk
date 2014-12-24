@@ -77,9 +77,9 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 						match.push_back(matches[k]);
 					}
 				}
-
+				/*
 				cv::drawMatches(img1,patterns[i].keypoints,img2 ,patterns[j].keypoints, match, result);
-
+				
 				static int count = 0;
 				std::stringstream ss;
 				ss << count;
@@ -88,7 +88,7 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 				name += ".jpg";
 				cv::imwrite(name,result);
 				count++;
-
+				*/
 			}
 		}
 
@@ -311,7 +311,7 @@ bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 	std::vector<unsigned char> inliersMask(queryPoints.size() );
 
 	//幾何学的整合性チェックによって当たり値を抽出
-	homography = cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 10, inliersMask);
+	homography = cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 3, inliersMask);
 
 	std::vector<cv::DMatch> inliers;
 	for(size_t i =0 ; i < inliersMask.size(); i++)
