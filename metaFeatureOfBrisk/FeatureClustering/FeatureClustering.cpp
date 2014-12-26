@@ -241,7 +241,7 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 	//画像のランク付け
 	for(int i = 0; i < clusters.size(); i++)
 	{
-		int rank = clusters[i].rankingList.size();					//画像のランク
+		int rank =0;// clusters[i].rankingList.size();					//画像のランク
 		std::pair<int , int> list;
 
 		for(int j = 0; j < clusters[i].rankingList.size(); j++)
@@ -728,7 +728,7 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 	}
 */
 	
-		
+	std::vector< cv::Mat> refinedDescriptors(basisCluster.metaDescriptors.rows );
 	for(int i = 0; i < clusters.size(); i++)
 	{
 		//基準の場合は飛ばす
@@ -799,7 +799,7 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 		for(int j = 0; j < transformedCluster.metaKeypoints.size(); j++)
 		{
 
-			double minDist = 10;
+			double minDist = 6.0;
 			int minDistanceKeypointNum = -1;
 			double x1 = transformedCluster.metaKeypoints[j].pt.x;
 			double y1 = transformedCluster.metaKeypoints[j].pt.y;
@@ -819,51 +819,25 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 			}
 
 			//閾値以内で最小のユークリッド距離をもつ点を基本となるクラスタに置換
-			if(minDist < 10.0)
+			if(minDist < 6.0)
 			{
-				cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(matcherName);
-				//knnマッチング
-				std::vector< std::vector<cv::DMatch>>  knnMatches;
-
-				std::vector<cv::Mat> descriptors(1);
-				descriptors[0] = basisCluster.metaDescriptors.clone();
-
-				matcher->add(descriptors);
-				matcher->train();
-
-				cv::Mat basisDescriptor;
-
-				// queryとmatcherに保存されている特徴量をknn構造体を用いて最近傍点を検索する.
-				matcher->knnMatch(transformedCluster.metaDescriptors.row(j), knnMatches, 2);
-	
-				//ratio test
-				for(int j = 0; j < knnMatches.size(); j++)
-				{
-					if(knnMatches[j].empty() == false)
-					{
-						cv::DMatch& bestMatch = knnMatches[j][0];
-						cv::DMatch& betterMatch = knnMatches[j][1];
-
-						float distanceRatio = bestMatch.distance / betterMatch.distance;
-
-						//距離の比が0.8以下の特徴だけ保存
-						if(distanceRatio < minRatio && bestMatch.trainIdx == minDistanceKeypointNum)
-						{
-							basisCluster.rankingList[minDistanceKeypointNum] += transformedCluster.rankingList[j];
-						}
-
-					}
-				}
-
+				basisCluster.rankingList[minDistanceKeypointNum] += transformedCluster.rankingList[j];
+				/*
+				refinedCluster.metaKeypoints.push_back(transformedCluster.metaKeypoints[j]);
+				refinedCluster.metaDescriptors.push_back(transformedCluster.metaDescriptors.row(j) );
+				refinedCluster.rankingList.push_back(transformedCluster.rankingList[j]);
+				*/
 				//descriptorを平均化
 				//
+				refinedDescriptors[minDistanceKeypointNum].push_back(transformedCluster.metaDescriptors.row(j) );
+
 			}else //無かったら追加
-			{
+			{/*
 				//マッチングした特徴量
 				basisCluster.metaKeypoints.push_back(transformedCluster.metaKeypoints[j]);
 				basisCluster.metaDescriptors.push_back(transformedCluster.metaDescriptors.row(j) );
 				basisCluster.rankingList.push_back(transformedCluster.rankingList[j]);
-				
+				*/
 			}
 		}
 
@@ -872,7 +846,7 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 			basisCluster.singleKeypoints.push_back(transformedCluster.singleKeypoints[j]);
 			basisCluster.singleDescriptors.push_back(transformedCluster.singleDescriptors.row(j) );
 		}
-
+		/*
 		cv::Mat resultImg = patterns[basisImgNum].image.clone();
 
 		for(int i = 0; i < basisCluster.metaKeypoints.size(); i++)
@@ -880,11 +854,11 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 			cv::circle(resultImg, basisCluster.metaKeypoints[i].pt , 2, cv::Scalar(0,0,255),2, CV_FILLED);
 		}
 		
-		for(int i = 0; i < transformedCluster.metaKeypoints.size(); i++)
+		for(int i = 0; i < refinedCluster.metaKeypoints.size(); i++)
 		{//white
-			cv::circle(resultImg, transformedCluster.metaKeypoints[i].pt , 1, cv::Scalar(255,0,0),2, CV_FILLED);
+			cv::circle(resultImg, refinedCluster.metaKeypoints[i].pt , 1, cv::Scalar(255,0,0),2, CV_FILLED);
 		}
-		
+		*/
 		//cv::imshow("result", resultImg);
 		//cv::waitKey(0);
 
@@ -897,6 +871,21 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 		cv::imwrite(result,resultImg);
 		count++;
 	*/	
+
+	}
+
+	for(int i=0; i< refinedDescriptors.size(); i++)
+	{
+		//もとの特徴量を追加
+		refinedDescriptors[i].push_back(basisCluster.metaDescriptors.row(i) );
+
+		//マッチングした特徴量で平均化
+		cv::Mat temp;
+		cv::reduce(refinedDescriptors[i], temp, 0, CV_REDUCE_AVG);
+
+		//平均化した特徴量に置き換え
+		for(int j =0; j < basisCluster.metaDescriptors.cols; j++)
+			basisCluster.metaDescriptors.row(i).at<unsigned char>(0,j) = temp.at<unsigned char>(0,j);
 
 	}
 

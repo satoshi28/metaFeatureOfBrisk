@@ -15,7 +15,7 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 {
 
 	//conect
-	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\DB\\refinedZuBuD3.accdb";
+	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\DB\\refinedZuBuD4.accdb";
 	System::String^ strLocation ="SELECT tb_ロケーション情報.[ID], tb_ロケーション情報.[name], tb_ロケーション情報.[latitude], tb_ロケーション情報.[longitude] FROM tb_ロケーション情報";
 	System::String^ strDesc ="SELECT * FROM tb_特徴量";
 	System::String^ strKeypoints ="SELECT * FROM tb_特徴点";
