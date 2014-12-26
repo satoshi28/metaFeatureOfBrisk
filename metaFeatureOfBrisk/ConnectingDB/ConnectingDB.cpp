@@ -15,55 +15,48 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 {
 
 	//conect
-	System::String^ strConn = "userid=root;password=root;database=objectdatabase;Host=localhost";
-	System::String^ strLocation ="SELECT * FROM tb_location";
-	System::String^ strDesc ="SELECT * FROM tb_descriptors";
-	System::String^ strKeypoints ="SELECT * FROM tb_keypoints";
-	System::String^ strInfo ="SELECT * FROM tb_information";
+	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\DB\\refinedZuBuD3.accdb";
+	System::String^ strLocation ="SELECT tb_ロケーション情報.[ID], tb_ロケーション情報.[name], tb_ロケーション情報.[latitude], tb_ロケーション情報.[longitude] FROM tb_ロケーション情報";
+	System::String^ strDesc ="SELECT * FROM tb_特徴量";
+	System::String^ strKeypoints ="SELECT * FROM tb_特徴点";
 
-	MySqlConnection^ conn = gcnew MySqlConnection(strConn);
+	OleDbConnection^ conn = gcnew OleDbConnection(strConn);
 	conn->Open();
 
 
 
 	//トランザクションの開始
-	MySqlTransaction^ transaction = conn->BeginTransaction(System::Data::IsolationLevel::ReadCommitted);
+	OleDbTransaction^ transaction = conn->BeginTransaction(System::Data::IsolationLevel::ReadCommitted);
 	try{
 		//ロケーション情報の更新用
-		MySqlDataAdapter^ locationAdapter = gcnew MySqlDataAdapter(strLocation, strConn);
-		MySqlCommandBuilder^ locationBuilder = gcnew MySqlCommandBuilder(locationAdapter);
+		OleDbDataAdapter^ locationAdapter = gcnew OleDbDataAdapter(strLocation, strConn);
+		OleDbCommandBuilder^ builder = gcnew OleDbCommandBuilder(locationAdapter);
 
 		//特徴量の更新用
-		MySqlDataAdapter^ descAdapter = gcnew MySqlDataAdapter(strDesc, strConn);
-		MySqlCommandBuilder^ descBuilder = gcnew MySqlCommandBuilder(descAdapter);
+		OleDbDataAdapter^ descAdapter = gcnew OleDbDataAdapter(strDesc, strConn);
+		OleDbCommandBuilder^ descBuilder = gcnew OleDbCommandBuilder(descAdapter);
 
 		//特徴点の更新用
-		MySqlDataAdapter^ keypointsAdapter = gcnew MySqlDataAdapter(strKeypoints, strConn);
-		MySqlCommandBuilder^ keypointsBuilder = gcnew MySqlCommandBuilder(keypointsAdapter);
+		OleDbDataAdapter^ keypointsAdapter = gcnew OleDbDataAdapter(strKeypoints, strConn);
+		OleDbCommandBuilder^ keypointsBuilder = gcnew OleDbCommandBuilder(keypointsAdapter);
 
-		//情報の更新用
-		MySqlDataAdapter^ infoAdapter = gcnew MySqlDataAdapter(strInfo, strConn);
-		MySqlCommandBuilder^ infoBuilder = gcnew MySqlCommandBuilder(infoAdapter);
 
-		/*
 		//tb_特徴量を更新
 		updateLocationTable(locationAdapter, patterns);
 		//tb_特徴量を更新
 		updateDescTable(descAdapter, patterns);
 		//tb_特徴点を更新
 		updateKeypointTable(keypointsAdapter, patterns);
-		*/
-		//tb_informationを更新
-		updateInfoTable(infoAdapter, patterns);
+
 		//トランザクションをコミットします。
         transaction->Commit();
 
 		return 0;
 	}
-	catch(MySqlException^ ex){
+	catch(System::Exception^){
 		//トランザクションのロールバック
 		transaction->Rollback();
-		System::Console::WriteLine(ex->Message);
+
 		return -1;
 	}
 	finally
@@ -84,7 +77,7 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 */
 }
 
-void ConnectingDB::updateLocationTable(MySqlDataAdapter^ adapter, std::vector<Pattern>& patterns)
+void ConnectingDB::updateLocationTable(OleDbDataAdapter^ adapter, std::vector<Pattern>& patterns)
 {
 	//取得用データテーブル
 	System::Data::DataTable^ table = gcnew System::Data::DataTable("data");
@@ -100,7 +93,7 @@ void ConnectingDB::updateLocationTable(MySqlDataAdapter^ adapter, std::vector<Pa
 		int ad =  patterns.size();
 		//新しい行の作成
 		datarow = table->NewRow();
-	
+
 		//新しく追加する行に対して,列名を指定してデータを追加する
 		datarow["latitude"]= patterns[i].gps.latitude;
 		datarow["longitude"]= patterns[i].gps.longitude;
@@ -112,7 +105,7 @@ void ConnectingDB::updateLocationTable(MySqlDataAdapter^ adapter, std::vector<Pa
 
 	//DBの更新
 	//オートナンバー取得用にupdateイベントを有効化
-	adapter->RowUpdated += gcnew MySqlRowUpdatedEventHandler(OnRowUpdated);
+	adapter->RowUpdated += gcnew OleDbRowUpdatedEventHandler(OnRowUpdated);
 	adapter->Update(dataChanges);
 
 	//オートナンバーをPatternsに保存
@@ -123,7 +116,7 @@ void ConnectingDB::updateLocationTable(MySqlDataAdapter^ adapter, std::vector<Pa
 	}
 }
 
-void ConnectingDB::updateDescTable(MySqlDataAdapter^ adapter, std::vector<Pattern> patterns)
+void ConnectingDB::updateDescTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns)
 {
 	System::Data::DataTable^ table = gcnew System::Data::DataTable("descriptors");
 	adapter->Fill(table);
@@ -153,7 +146,7 @@ void ConnectingDB::updateDescTable(MySqlDataAdapter^ adapter, std::vector<Patter
 	adapter->Update(table);
 }
 
-void ConnectingDB::updateKeypointTable(MySqlDataAdapter^ adapter, std::vector<Pattern> patterns)
+void ConnectingDB::updateKeypointTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns)
 {
 	System::Data::DataTable^ table = gcnew System::Data::DataTable("keypoints");
 	adapter->Fill(table);
@@ -179,56 +172,6 @@ void ConnectingDB::updateKeypointTable(MySqlDataAdapter^ adapter, std::vector<Pa
 	//DB更新
 	adapter->Update(table);
 }
-
-
-void ConnectingDB::updateInfoTable(MySqlDataAdapter^ adapter, std::vector<Pattern>& patterns)
-{
-	System::Data::DataTable^ table = gcnew System::Data::DataTable("info");
-	adapter->Fill(table);
-
-	//新しい行の型を作成
-	System::Data::DataRow^ row;
-	for(int i = 0; i < patterns.size() ; i++)
-	{
-		//新しい行の作成
-		row = table->NewRow();
-		/*
-		unsigned char*  data = patterns[i].image.data;
-		int len = strlen((char*)data);
-		
-		array<unsigned char>^ byteArray = gcnew array<unsigned char>(len);
-		// convert native pointer to System::IntPtr with C-Style cast
-		System::Runtime::InteropServices::Marshal::Copy((System::IntPtr)data,byteArray, 0, len);
-	
-		row["ID"] = i+1;
-		row["image"] =  byteArray; 
-		*/
-		//int number = patterns[i].numberOfDB;
-		int number = i+1;
-		
-		std::stringstream ss;
-		ss <<number;
-		std::string result = "C:\\Apache2.2\\htdocs\\images\\";
-		std::string name =  ss.str();
-		name += ".jpg";
-
-		result += name;
-
-		cv::imwrite( result, patterns[i].image);
-
-		std::string path = "http://localhost/images/" + name;
-		System::String^ str = gcnew System::String(path.c_str());
-		row["ID"] = number;
-		row["imageID"] = str;
-
-		//行の追加
-		table->Rows->Add(row);
-		
-	}
-	//DB更新
-	adapter->Update(table);
-}
-
 
 void ConnectingDB::SaveToCSV(System::Data::DataTable^ dt, System::String^ fileName, bool hasHeader, System::String^ separator, System::String^ quote, System::String^ replace)
 {

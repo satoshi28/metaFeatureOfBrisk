@@ -267,6 +267,8 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 	*/
 	clusterToMetaFeature(clusters, homographyes, imageRankingList[0].second, metaFeature);
 
+	/*
+
 	//-----------------step 2 --------------------------------------------//
 
 	//下準備、各clusterのmetaDescriptorsをclusterサイズ(マッチングした数)に基づいて降順に並び替え
@@ -311,6 +313,8 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 	{
 		addSingleFeatures(clusters, imageRankingList, metaFeature);
 	}
+
+	*/
 }
 
 bool FeatureClustering::createMetaFeature(std::vector<cv::Mat> rankedDescriptors,std::vector< std::vector<cv::KeyPoint>> rankedKeypoints,std::vector<int> imgNumbers, Pattern& metaFeature)
@@ -746,11 +750,10 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 		cv::reduce(homography, tmp1, 1, CV_REDUCE_SUM);
 		cv::reduce(tmp1, tmp2, 0, CV_REDUCE_SUM);
 		if(tmp2.at<double>(0,0) == 0.0)
+		{
+			std::cout << "zeros matrix" << std::endl;
 			continue;
-
-
-
-		std::cout << homography << std::endl;
+		}
 
 		double mm[3][3];
 		for(int j = 0; j < 3; j++)
@@ -758,7 +761,6 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 			for(int k = 0; k < 3; k++)
 			{
 				mm[j][k] = homography.at<double>(j,k);
-				std::cout << mm[j][k] << std::endl;
 			}
 		}
 
@@ -777,7 +779,7 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 			transformedCluster.metaKeypoints[j].pt.y = t_y;
 
 		}
-		/*
+		
 		for(int j = 0; j < transformedCluster.singleKeypoints.size(); j++)
 		{
 			double x = transformedCluster.singleKeypoints[j].pt.x;
@@ -789,13 +791,14 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 			transformedCluster.singleKeypoints[j].pt.x = t_x;
 			transformedCluster.singleKeypoints[j].pt.y = t_y;
 
-		}*/
+		}
 
 		//
 		ClusterOfFeature refinedCluster;
 		//ユークリッド距離計算
 		for(int j = 0; j < transformedCluster.metaKeypoints.size(); j++)
 		{
+
 			double minDist = 10;
 			int minDistanceKeypointNum = -1;
 			double x1 = transformedCluster.metaKeypoints[j].pt.x;
@@ -816,19 +819,58 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 			}
 
 			//閾値以内で最小のユークリッド距離をもつ点を基本となるクラスタに置換
-			if(minDist < 6.0)
+			if(minDist < 10.0)
 			{
-				basisCluster.rankingList[minDistanceKeypointNum] += transformedCluster.rankingList[j];
+				cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(matcherName);
+				//knnマッチング
+				std::vector< std::vector<cv::DMatch>>  knnMatches;
+
+				std::vector<cv::Mat> descriptors(1);
+				descriptors[0] = basisCluster.metaDescriptors.clone();
+
+				matcher->add(descriptors);
+				matcher->train();
+
+				cv::Mat basisDescriptor;
+
+				// queryとmatcherに保存されている特徴量をknn構造体を用いて最近傍点を検索する.
+				matcher->knnMatch(transformedCluster.metaDescriptors.row(j), knnMatches, 2);
+	
+				//ratio test
+				for(int j = 0; j < knnMatches.size(); j++)
+				{
+					if(knnMatches[j].empty() == false)
+					{
+						cv::DMatch& bestMatch = knnMatches[j][0];
+						cv::DMatch& betterMatch = knnMatches[j][1];
+
+						float distanceRatio = bestMatch.distance / betterMatch.distance;
+
+						//距離の比が0.8以下の特徴だけ保存
+						if(distanceRatio < minRatio && bestMatch.trainIdx == minDistanceKeypointNum)
+						{
+							basisCluster.rankingList[minDistanceKeypointNum] += transformedCluster.rankingList[j];
+						}
+
+					}
+				}
 
 				//descriptorを平均化
 				//
 			}else //無かったら追加
-			{/*
+			{
+				//マッチングした特徴量
 				basisCluster.metaKeypoints.push_back(transformedCluster.metaKeypoints[j]);
 				basisCluster.metaDescriptors.push_back(transformedCluster.metaDescriptors.row(j) );
 				basisCluster.rankingList.push_back(transformedCluster.rankingList[j]);
-				*/
+				
 			}
+		}
+
+		//マッチングしなかった特徴量
+		for(int j = 0; j < transformedCluster.singleDescriptors.rows; j++){			
+			basisCluster.singleKeypoints.push_back(transformedCluster.singleKeypoints[j]);
+			basisCluster.singleDescriptors.push_back(transformedCluster.singleDescriptors.row(j) );
 		}
 
 		cv::Mat resultImg = patterns[basisImgNum].image.clone();
@@ -873,7 +915,7 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 
 	//各clusterのmetaDescriptorsをclusterサイズ(マッチングした数)に基づいて降順に並び替え
 
-	for(int j =0; j < 200; j++)
+	for(int j =0; j < budget; j++)
 	{
 		if(j >= (int)basisCluster.metaKeypoints.size() )
 		{
@@ -883,17 +925,40 @@ void FeatureClustering::clusterToMetaFeature(std::vector<ClusterOfFeature> clust
 		int num = index[j].second;
 		metaFeature.descriptors.push_back(basisCluster.metaDescriptors.row(num) );
 		metaFeature.keypoints.push_back(basisCluster.metaKeypoints[num] );
-
-
 	}
 	
+	//予算まで達しなかったらsingleKeyPointを割り当てる
+	if(metaFeature.descriptors.rows < budget)
+	{
+		int num = 0;
+		for(int j = metaFeature.descriptors.rows; j < budget; j++)
+		{
+			if(j >= (int)basisCluster.singleDescriptors.rows )
+			{
+				break;
+			}
+			metaFeature.descriptors.push_back(basisCluster.singleDescriptors.row(num) );
+			metaFeature.keypoints.push_back(basisCluster.singleKeypoints[num] );
+			num++;
+		}
+	}
+
 	cv::Mat image = patterns[basisImgNum].image.clone();
 	for(int i = 0; i < metaFeature.keypoints.size(); i++)
 	{//white
 		cv::circle(image, metaFeature.keypoints[i].pt , 1, cv::Scalar(255,0,0),2, CV_FILLED);
 	}
 		
-	cv::imshow("result", image);
-	cv::waitKey(0);
+	//cv::imshow("result", image);
+	//cv::waitKey(0);
+	/*static int count = 0;
+		std::stringstream ss;
+		ss << count;
+		std::string result = "metaFeature";
+		result +=  ss.str();
+		result += ".jpg";
+		cv::imwrite(result,image);
+		count++;
+		*/
 
 }

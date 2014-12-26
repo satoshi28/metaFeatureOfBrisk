@@ -278,8 +278,8 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 			}else
 			{
 				//ホモグラフィ行列が推定できなかった場合は単位行列を格納
-				cv::Mat eye = cv::Mat::zeros(3, 3, CV_64FC1); // 単位行列を生成
-				homographyes.push_back(eye);
+				cv::Mat zeros = cv::Mat::zeros(3, 3, CV_64FC1); // 単位行列を生成
+				homographyes.push_back(zeros);
 			}
 			
 
@@ -295,7 +295,7 @@ void Matching::match(std::vector<cv::KeyPoint> queryKeypoints,cv::Mat queryDescr
 
 bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match, cv::Mat& homography)
 {
-	if(match.size() < 8)
+	if(match.size() < 30)
 	{
 		match.clear();
 		return false;
@@ -313,6 +313,10 @@ bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 	//幾何学的整合性チェックによって当たり値を抽出
 	homography = cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 3, inliersMask);
 
+	bool isGoodHomography = niceHomography(homography);
+	if(isGoodHomography == false)
+		return false;
+
 	std::vector<cv::DMatch> inliers;
 	for(size_t i =0 ; i < inliersMask.size(); i++)
 	{
@@ -321,6 +325,27 @@ bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 	}
 
 	match.swap(inliers);
+	return true;
+}
+
+bool Matching::niceHomography(const cv::Mat H)
+{
+	const double det = H.at<double>(0,0) * H.at<double>(1,1) - H.at<double>(1,0) * H.at<double>(0,1);
+	if (det < 0)
+	  return false;
+	
+	const double N1 = sqrt( H.at<double>(0,0) * H.at<double>(0,0) + H.at<double>(1,0) * H.at<double>(1,0) );
+	if (N1 > 4 || N1 < 0.1)
+	  return false;
+	
+	const double N2 = sqrt( H.at<double>(0,1) * H.at<double>(0,1) + H.at<double>(1,1) * H.at<double>(1,1) );
+	if (N2 > 4 || N2 < 0.1)
+	  return false;
+
+	const double N3 = sqrt( H.at<double>(2,0) * H.at<double>(2,0) + H.at<double>(2,1) * H.at<double>(2,1) );
+	if (N3 > 0.002)
+	  return false;
+	
 	return true;
 }
 

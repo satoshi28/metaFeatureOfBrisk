@@ -47,7 +47,7 @@ int main(array<System::String ^> ^args)
 		std::cout << "-----------------" << std::endl;
 	}
 
-	//db.updateDB(metaFeatures);
+	db.updateDB(metaFeatures);
 	
 	return 0;
 }

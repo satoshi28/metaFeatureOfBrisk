@@ -35,6 +35,8 @@ private:
 
 	//幾何学的整合性チェック
 	bool geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& match,  cv::Mat& homography);
+
+	bool niceHomography(const cv::Mat H);
 private:
     
 	//画像セットの数

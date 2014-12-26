@@ -3,10 +3,7 @@
 
 ////////////////////////////////////////////////////////////////////
 using namespace System::Diagnostics;
-//using namespace System::Data::OleDb;
-//using namespace System::Data::SQLite;
-using namespace MySql::Data::MySqlClient;
-
+using namespace System::Data::OleDb;
 
 #include "../Pattern.h"
 
@@ -25,36 +22,26 @@ public:
 
 private:
 	/* DBのtb_ロケーション情報を更新 */
-	void updateLocationTable(MySqlDataAdapter^ adapter, std::vector<Pattern>& patterns);
+	void updateLocationTable(OleDbDataAdapter^ adapter, std::vector<Pattern>& patterns);
 
 	/* DBのtb_特徴量を更新 */
-	void updateDescTable(MySqlDataAdapter^ adapter, std::vector<Pattern> patterns);
+	void updateDescTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns);
 
 	/* DBのtb_特徴点を更新 */
-	void ConnectingDB::updateKeypointTable(MySqlDataAdapter^ adapter, std::vector<Pattern> patterns);
-
-	/* DBのtb_informationを更新 */
-	void ConnectingDB::updateInfoTable(MySqlDataAdapter^ adapter, std::vector<Pattern>& patterns);
+	void ConnectingDB::updateKeypointTable(OleDbDataAdapter^ adapter, std::vector<Pattern> patterns);
 
 	/* DB更新時に発生するイベント */
-	static void  OnRowUpdated(System::Object^ sender, MySqlRowUpdatedEventArgs^ e)
+	static void OnRowUpdated(System::Object^ sender, OleDbRowUpdatedEventArgs^ e)
 	{
 		if (e->Status == System::Data::UpdateStatus::Continue && e->StatementType == System::Data::StatementType::Insert)
 	    {
-			
-			MySqlCommand^ cmdNewID= gcnew MySqlCommand("SELECT LAST_INSERT_ID()", e->Command->Connection);
-			System::Object^ o;
-			o = cmdNewID->ExecuteScalar();
-			e->Row["ID"] = System::Int32::Parse( o->ToString() );
+			OleDbCommand^ cmdNewID = gcnew OleDbCommand("SELECT @@IDENTITY", e->Command->Connection);
+			int s = (int)cmdNewID->ExecuteScalar();
+			e->Row["ID"] = (int)cmdNewID->ExecuteScalar();
 			e->Status = System::Data::UpdateStatus::SkipCurrentRow;
 	
 		}
 	};
-
-private:
-	
-
-
 };
 
 
