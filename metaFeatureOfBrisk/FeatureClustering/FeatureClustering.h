@@ -12,40 +12,77 @@
 
 
 /**
- * Store the image data and computed descriptors of target pattern
+ * 複数の画像からメタ特徴量を作成するクラス
  */
 class FeatureClustering
 {
 public:
-	FeatureClustering(int m_budget = budget, bool m_enableMultipleRatioTest = enableMultipleRatioTest);
+	FeatureClustering(int m_budget = budget);
 
-	/*
-	* グループ化された画像群からメタ特徴量を抽出する
+	/**
+	* @brief グループ化された画像群からメタ特徴量を作成する
+	* @param[in] images			画像群
+	* @param[out] metaFeatures	メタ特徴量
 	*/
 	void clusterFeatures(std::vector<cv::Mat> images, Pattern& metaFeatures);
 
 private:
-
-	/* 複数の画像間で見つかった特徴量を一つのmeta特徴量にまとめる */
+	/**
+	* @brief 複数の画像間で見つかった特徴量を一つのメタ特徴量にまとめる
+	* @param[in] matches		マッチング結果
+	* @param[out] clusters		マッチング結果から一つの特徴にまとめたクラスタ
+	*/
 	void clusterDescriptors(std::vector<std::vector<cv::DMatch>> matches, std::vector<ClusterOfFeature>& clusters);
 
-	/* マッチングした特徴量をまとめたclusterからメタ特徴量を作成する処理 */
-	void featureBudgeting(std::vector<ClusterOfFeature> clusters, Pattern& metaFeature);
+	/**
+	* @brief 画像をランク付けする
+	* @param[in] clusters		マッチング結果から一つの特徴にまとめたクラスタ
+	* @param[out] imageRankingList 画像のランク付けをあらわしたリスト(first==rank, second==index)
+	*/
+	void rankImages(std::vector<ClusterOfFeature> clusters, std::vector< std::pair<int, int> >& imageRankingList);
 
-	bool createMetaFeature(std::vector<cv::Mat> rankedDescriptors, cv::Mat& metaDescriptors);
+	/**
+	* @brief マッチングした特徴量をまとめたクラスタからメタ特徴量を作成する処理
+	* @param[in] clusters		クラスタ
+	* @param[out] metaFeature	メタ特徴量
+	*/
+	void featureBudgeting(std::vector<ClusterOfFeature> clusters, std::vector< std::pair<int, int> > imageRankingList, Pattern& metaFeature);
 
-	void addSingleFeatures(std::vector<ClusterOfFeature> clusters,std::vector<std::pair<int, int>> rankingIndex, cv::Mat& metaDescriptors);
-#if _DEBUG
+	/**
+	* @brief ランキングが高い画像から順に最も多くマッチングした特徴量を優先して割り当てる処理
+	* @param[in] rankedDescriptors	クラスタのランクが高い順に並び替えた特徴量
+	* @param[in] rankedKeypoints	クラスタのランクが高い順に並び替えた特徴点
+	* @param[in] imgNumbers			画像IDリスト
+	* @param[out] metaFeature		メタ特徴量
+	* return 成功か否か
+	*/
+	bool createMetaFeature(std::vector<cv::Mat> rankedDescriptors,std::vector< std::vector<cv::KeyPoint>> rankedKeypoints,std::vector<int> imgNumbers, Pattern& metaFeature);
+
+	/**
+	* @brief 単体の特徴量からメタ特徴量を埋める処理
+	* @param[in] clusters		マッチング結果から一つの特徴にまとめたクラスタ
+	* @param[in] rankingIndex	画像ランキング
+	* @param[out] metaFeature	メタ特徴量
+	*/
+	void addSingleFeatures(std::vector<ClusterOfFeature> clusters,std::vector<std::pair<int, int>> rankingIndex,Pattern& metaFeature);
+
+	/**
+	* @brief 単体の特徴量からメタ特徴量を埋める処理
+	* @param[in] homography		ホモグラフィ
+	* @param[in] src_keypoints	変換元の特徴点
+	* @param[out] dst_keypoints	変換後の特徴点
+	*/
+	bool adjustKeypoints(const cv::Mat_<double>& H, std::vector<cv::KeyPoint> src_keypoints, std::vector<cv::KeyPoint> dst_keypoints);
+
 	/* 特徴量を描画 */
 	void showResult(Pattern pattern, ClusterOfFeature cluster);
 
-	void showMetaFeatures(cv::Mat image,ClusterOfFeature cluster, Pattern meta);
-#endif
+	void showMetaFeatures(std::vector<Pattern> patterns,Pattern metaFeature);
 
+	cv::Mat getModeDescriptors(cv::Mat trainDescriptors);
 private:
-	int m_budget;
-	bool m_enableMultipleRatioTest;
-	std::vector<Pattern> patterns;
+	int m_budget;					//メタ特徴量の予算
+	std::vector<Pattern> patterns;	//各画像の特徴
 
 };
 

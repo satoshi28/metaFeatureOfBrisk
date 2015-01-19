@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ExtractFeatures.hpp"
 
-ExtractFeatures::ExtractFeatures(cv::Ptr<cv::FeatureDetector> detector, 
+ExtractFeatures::ExtractFeatures(cv::SurfFeatureDetector detector, 
     cv::Ptr<cv::DescriptorExtractor> extractor
 	)
     : m_detector(detector)
@@ -29,14 +29,13 @@ bool ExtractFeatures::getFeatures(std::vector<cv::Mat>& images,
 		//“Á’¥—Ê‚Ì’Šo
 		Pattern _pattern;
 		extractFlag = extractFeatures(grayImg, _pattern.keypoints, _pattern.descriptors);
-		if(extractFlag == false)
-			return false;
 
+		//Pattern\‘¢‘ÌŒQ‚É’Ç‰Á
 		_pattern.image = images[i];
-
 		patterns.push_back( _pattern );
 
-		std::cout << _pattern.descriptors.size() << std::endl;
+		if (extractFlag == false)
+			return false;
 	}
 	return true;
 }
@@ -56,7 +55,7 @@ bool ExtractFeatures::extractFeatures(const cv::Mat& image, std::vector<cv::KeyP
     assert(!image.empty());
     assert(image.channels() == 1);
 
-    m_detector->detect(image, keypoints);
+    m_detector.detect(image, keypoints);
     if (keypoints.empty())
         return false;
 

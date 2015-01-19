@@ -19,6 +19,9 @@
     <Filter Include="ヘッダー ファイル\FeatureClustering">
       <UniqueIdentifier>{fec56811-b4ff-4738-aa26-fb95af266cf7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\ConnectingDB">
+      <UniqueIdentifier>{df4ab113-2bcc-4c7f-83ce-6bf516040f67}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -45,11 +48,17 @@
     <ClInclude Include="FeatureClustering\Matching.h">
       <Filter>ヘッダー ファイル\FeatureClustering</Filter>
     </ClInclude>
-    <ClInclude Include="FeatureClustering\Pattern.hpp">
-      <Filter>ヘッダー ファイル\FeatureClustering</Filter>
-    </ClInclude>
     <ClInclude Include="GroupPath.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Pattern.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectingDB\ConnectingDB.h">
+      <Filter>ソース ファイル\ConnectingDB</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectingDB\exifGps.h">
+      <Filter>ソース ファイル\ConnectingDB</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -75,6 +84,12 @@
     </ClCompile>
     <ClCompile Include="metaFeatures.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectingDB\ConnectingDB.cpp">
+      <Filter>ソース ファイル\ConnectingDB</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectingDB\exifGps.cpp">
+      <Filter>ソース ファイル\ConnectingDB</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
