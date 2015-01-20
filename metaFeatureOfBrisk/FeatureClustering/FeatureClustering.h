@@ -66,14 +66,6 @@ private:
 	*/
 	void addSingleFeatures(std::vector<ClusterOfFeature> clusters,std::vector<std::pair<int, int>> rankingIndex,Pattern& metaFeature);
 
-	/**
-	* @brief 単体の特徴量からメタ特徴量を埋める処理
-	* @param[in] homography		ホモグラフィ
-	* @param[in] src_keypoints	変換元の特徴点
-	* @param[out] dst_keypoints	変換後の特徴点
-	*/
-	bool adjustKeypoints(const cv::Mat_<double>& H, std::vector<cv::KeyPoint> src_keypoints, std::vector<cv::KeyPoint>& dst_keypoints);
-
 	/* 特徴量を描画 */
 	void showResult(Pattern pattern, ClusterOfFeature cluster);
 
@@ -83,7 +75,6 @@ private:
 private:
 	int m_budget;					//メタ特徴量の予算
 	std::vector<Pattern> patterns;	//各画像の特徴
-	std::vector< std::vector<cv::Mat> > AllHomography;
 
 };
 

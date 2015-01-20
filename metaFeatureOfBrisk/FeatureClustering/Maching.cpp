@@ -80,7 +80,6 @@ void Matching::match(const std::vector<cv::KeyPoint> queryKeypoints,const cv::Ma
 {
 	matches.clear();		//初期化
 	int imgNumber = 0;		//マッチングされている画像のID
-	std::vector<cv::Mat> homographyes;	//homographyの配列
 
 	//最近傍点の探索
 	for(int i = 0; i < dataSetSize -1 ; i++)
@@ -118,8 +117,7 @@ void Matching::match(const std::vector<cv::KeyPoint> queryKeypoints,const cv::Ma
 			}
 		}
 		//幾何学的整合性チェック
-		cv::Mat homography;
-		bool passFlag = geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches, homography);
+		bool passFlag = geometricConsistencyCheck(queryKeypoints, trainKeypoints[i], correctMatches);
 
 		//幾何学的整合性チェックに通過したもののみ登録する
 		if(passFlag == true){
@@ -129,14 +127,6 @@ void Matching::match(const std::vector<cv::KeyPoint> queryKeypoints,const cv::Ma
 				matches.push_back(correctMatches[k]);
 			}
 
-			//homographyの保存
-			homographyes.push_back(homography);
-		}
-		else
-		{
-			//ホモグラフィ行列が推定できなかった場合はゼロ行列を格納
-			cv::Mat zeros = cv::Mat::zeros(3, 3, CV_64FC1); // 単位行列を生成
-			homographyes.push_back(zeros);
 		}
 
 		//初期化
@@ -144,10 +134,9 @@ void Matching::match(const std::vector<cv::KeyPoint> queryKeypoints,const cv::Ma
 		correctMatches.clear();
 		imgNumber++;
 	}
-	AllHomographyes.push_back(homographyes);
 }
 
-bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& matches, cv::Mat& homography)
+bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& matches)
 {
 	if(matches.size() < 30)
 	{
@@ -165,7 +154,7 @@ bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 	std::vector<unsigned char> inliersMask(queryPoints.size() );
 
 	//幾何学的整合性チェックによって当たり値を抽出
-	homography = cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 3, inliersMask);
+	cv::Mat homography = cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 3, inliersMask);
 
 	//Homography行列が正しいか検証
 	bool isGoodHomography = niceHomography(homography);
@@ -202,9 +191,4 @@ bool Matching::niceHomography(const cv::Mat H)
 	  return false;
 	
 	return true;
-}
-
-std::vector<std::vector<cv::Mat>> Matching::getHomography()
-{
-	return AllHomographyes;
 }

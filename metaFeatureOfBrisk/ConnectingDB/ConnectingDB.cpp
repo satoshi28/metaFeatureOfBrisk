@@ -254,7 +254,6 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 	System::String^ strConn = "userid=root;password=root;database=objectdatabase2;Host=localhost";
 	System::String^ strLocation ="SELECT * FROM tb_location";
 	System::String^ strDesc ="SELECT * FROM tb_descriptors";
-	System::String^ strKeypoints ="SELECT * FROM tb_keypoints";
 	System::String^ strInfo ="SELECT * FROM tb_information";
 
 	MySqlConnection^ conn = gcnew MySqlConnection(strConn);
@@ -273,10 +272,6 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 		MySqlDataAdapter^ descAdapter = gcnew MySqlDataAdapter(strDesc, strConn);
 		MySqlCommandBuilder^ descBuilder = gcnew MySqlCommandBuilder(descAdapter);
 
-		//特徴点の更新用
-		MySqlDataAdapter^ keypointsAdapter = gcnew MySqlDataAdapter(strKeypoints, strConn);
-		MySqlCommandBuilder^ keypointsBuilder = gcnew MySqlCommandBuilder(keypointsAdapter);
-
 		//情報の更新用
 		MySqlDataAdapter^ infoAdapter = gcnew MySqlDataAdapter(strInfo, strConn);
 		MySqlCommandBuilder^ infoBuilder = gcnew MySqlCommandBuilder(infoAdapter);
@@ -286,8 +281,6 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 		updateLocationTable(locationAdapter, patterns);
 		//tb_特徴量を更新
 		updateDescTable(descAdapter, patterns);
-		//tb_特徴点を更新
-		updateKeypointTable(keypointsAdapter, patterns);
 		
 		//tb_informationを更新
 		updateInfoTable(infoAdapter, patterns);
@@ -389,35 +382,6 @@ void ConnectingDB::updateDescTable(MySqlDataAdapter^ adapter, std::vector<Patter
 	//DB更新
 	adapter->Update(table);
 }
-
-void ConnectingDB::updateKeypointTable(MySqlDataAdapter^ adapter, std::vector<Pattern> patterns)
-{
-	System::Data::DataTable^ table = gcnew System::Data::DataTable("keypoints");
-	adapter->Fill(table);
-
-
-
-	//新しい行の型を作成
-	System::Data::DataRow^ row;
-	for(int i = 0; i < patterns.size() ; i++)
-	{
-		for(int j = 0; j < patterns[i].keypoints.size() ; j++)
-		{
-			//新しい行の作成
-			row = table->NewRow();
-
-			row["ID"] = patterns[i].numberOfDB;
-			row["featureID"] = j;
-			row["px"] = patterns[i].keypoints[j].pt.x;
-			row["py"] = patterns[i].keypoints[j].pt.y;
-			//行の追加
-			table->Rows->Add(row);
-		}
-	}
-	//DB更新
-	adapter->Update(table);
-}
-
 
 void ConnectingDB::updateInfoTable(MySqlDataAdapter^ adapter, std::vector<Pattern>& patterns)
 {

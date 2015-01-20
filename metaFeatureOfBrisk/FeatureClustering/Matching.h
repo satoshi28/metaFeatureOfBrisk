@@ -63,7 +63,7 @@ private:
 	* @note Ransacアルゴリズムを使用
 	*/
 	bool geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, 
-		std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& matches, cv::Mat& homography);
+		std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& matches);
 
 	/**
 	* @brief 推定したHomography行列が正しいものかを判定する
@@ -75,7 +75,6 @@ private:
 private:
 	int dataSetSize;			//画像セットの数
 	int imgNumberOfAdjstment;	//マッチングペアの画像IDを修正するための変数
-	std::vector<std::vector<cv::Mat>> AllHomographyes;	//GeometoricConsistencyCheckで得られたすべてのhomography
 };
 
 
