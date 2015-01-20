@@ -38,6 +38,93 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	std::vector< std::pair<int, int> > imageRankingList;
 	rankImages(clusters, imageRankingList);
 
+	//特徴点の変換
+	int basisImgNum = imageRankingList[0].second;
+	ClusterOfFeature basisCluster = clusters[basisImgNum];
+	AllHomography = matching.getHomography();
+	cv::Mat homography;
+	for (int i = 0; i < clusters.size(); i++)
+	{
+		if (i == basisImgNum) continue;
+
+		bool homographyFound = false;
+		int num = basisImgNum;
+		int n = 1;
+		while (homographyFound == false && n < AllHomography[i].size() )
+		{
+			cv::Mat firstHomography;
+
+			if (i == num){
+				n++;
+				continue;
+			}
+			if (i < num)
+				firstHomography = AllHomography[i][num - 1];
+			else if (i > num)
+				firstHomography = AllHomography[i][num];
+
+			//ゼロ行列か判定
+			cv::Mat tmp1, tmp2;
+			cv::reduce(firstHomography, tmp1, 1, CV_REDUCE_SUM);
+			cv::reduce(tmp1, tmp2, 0, CV_REDUCE_SUM);
+			if (tmp2.at<double>(0, 0) == 0.0)
+			{
+				num = imageRankingList[n].second;
+			}
+			else
+			{
+				homography = firstHomography;
+				homographyFound = true;
+			}
+			n++;
+		}
+
+		if (num != basisImgNum && homographyFound == true)
+		{
+			cv::Mat secondHomography;
+			if (num < basisImgNum)
+				secondHomography = AllHomography[num][basisImgNum - 1];
+			else if (num > basisImgNum)
+				secondHomography = AllHomography[i][num];
+
+			//ゼロ行列か判定
+			cv::Mat tmp1, tmp2;
+			cv::reduce(secondHomography, tmp1, 1, CV_REDUCE_SUM);
+			cv::reduce(tmp1, tmp2, 0, CV_REDUCE_SUM);
+			if (tmp2.at<double>(0, 0) == 0.0)
+			{
+				num = imageRankingList[n].second;
+			}
+			else
+			{
+				homography = homography * secondHomography;
+			}
+		}
+		else if (homographyFound == false)
+		{
+			homography = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+		}
+		//特徴点変換処理
+		std::vector<cv::KeyPoint> dst_metaKeypoints;
+		adjustKeypoints(homography, clusters[i].metaKeypoints, dst_metaKeypoints);
+
+		std::vector<cv::KeyPoint> dst_singleKeypoints;
+		adjustKeypoints(homography, clusters[i].singleKeypoints, dst_singleKeypoints);
+
+		//要素の移し替え
+		clusters[i].metaKeypoints.swap(dst_metaKeypoints);
+		clusters[i].singleKeypoints.swap(dst_singleKeypoints);
+		/*
+		cv::Mat image = patterns[basisImgNum].image.clone();
+		for (int j = 0; j < clusters[i].metaKeypoints.size(); j++)
+		{//white
+			cv::circle(image, clusters[i].metaKeypoints[j].pt, 1, cv::Scalar(255, 0, 0), 2, CV_FILLED);
+		}
+		cv::imshow("result", image);
+		cv::waitKey(0);
+		*/
+	}
+
 	//クラスタリング特徴量からメタ特徴量を作成する
 	featureBudgeting(clusters, imageRankingList, metaFeatures);
 	
@@ -327,7 +414,7 @@ void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters
 	}
 }
 
-bool adjustKeypoints(const cv::Mat_<double>& H, std::vector<cv::KeyPoint> src_keypoints, std::vector<cv::KeyPoint> dst_keyponts)
+bool FeatureClustering::adjustKeypoints(const cv::Mat_<double>& H, std::vector<cv::KeyPoint> src_keypoints, std::vector<cv::KeyPoint>& dst_keyponts)
 {
 	//ゼロ行列か判定
 	cv::Mat tmp1, tmp2;

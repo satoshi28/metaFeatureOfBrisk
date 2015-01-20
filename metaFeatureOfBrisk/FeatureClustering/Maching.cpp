@@ -144,7 +144,7 @@ void Matching::match(const std::vector<cv::KeyPoint> queryKeypoints,const cv::Ma
 		correctMatches.clear();
 		imgNumber++;
 	}
-
+	AllHomographyes.push_back(homographyes);
 }
 
 bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& matches, cv::Mat& homography)

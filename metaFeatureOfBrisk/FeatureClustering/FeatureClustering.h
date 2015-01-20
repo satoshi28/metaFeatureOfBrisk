@@ -72,7 +72,7 @@ private:
 	* @param[in] src_keypoints	•ÏŠ·Œ³‚Ì“Á’¥“_
 	* @param[out] dst_keypoints	•ÏŠ·Œã‚Ì“Á’¥“_
 	*/
-	bool adjustKeypoints(const cv::Mat_<double>& H, std::vector<cv::KeyPoint> src_keypoints, std::vector<cv::KeyPoint> dst_keypoints);
+	bool adjustKeypoints(const cv::Mat_<double>& H, std::vector<cv::KeyPoint> src_keypoints, std::vector<cv::KeyPoint>& dst_keypoints);
 
 	/* “Á’¥—Ê‚ğ•`‰æ */
 	void showResult(Pattern pattern, ClusterOfFeature cluster);
@@ -83,6 +83,7 @@ private:
 private:
 	int m_budget;					//ƒƒ^“Á’¥—Ê‚Ì—\Z
 	std::vector<Pattern> patterns;	//Še‰æ‘œ‚Ì“Á’¥
+	std::vector< std::vector<cv::Mat> > AllHomography;
 
 };
 
