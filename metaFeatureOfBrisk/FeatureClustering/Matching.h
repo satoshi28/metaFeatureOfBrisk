@@ -72,6 +72,7 @@ private:
 	* @note 
 	*/
 	bool niceHomography(const cv::Mat H);
+
 private:
 	int dataSetSize;			//画像セットの数
 	int imgNumberOfAdjstment;	//マッチングペアの画像IDを修正するための変数

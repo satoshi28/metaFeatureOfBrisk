@@ -16,9 +16,6 @@
     <Filter Include="ソース ファイル\featureClustering">
       <UniqueIdentifier>{5d78c75d-d0fa-4813-bb48-623edb50b35d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\FeatureClustering">
-      <UniqueIdentifier>{fec56811-b4ff-4738-aa26-fb95af266cf7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ソース ファイル\ConnectingDB">
       <UniqueIdentifier>{df4ab113-2bcc-4c7f-83ce-6bf516040f67}</UniqueIdentifier>
     </Filter>
@@ -33,21 +30,6 @@
     <ClInclude Include="resource.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="FeatureClustering\ClusterOfFeature.h">
-      <Filter>ヘッダー ファイル\FeatureClustering</Filter>
-    </ClInclude>
-    <ClInclude Include="FeatureClustering\CONSTANT.h">
-      <Filter>ヘッダー ファイル\FeatureClustering</Filter>
-    </ClInclude>
-    <ClInclude Include="FeatureClustering\ExtractFeatures.hpp">
-      <Filter>ヘッダー ファイル\FeatureClustering</Filter>
-    </ClInclude>
-    <ClInclude Include="FeatureClustering\FeatureClustering.h">
-      <Filter>ヘッダー ファイル\FeatureClustering</Filter>
-    </ClInclude>
-    <ClInclude Include="FeatureClustering\Matching.h">
-      <Filter>ヘッダー ファイル\FeatureClustering</Filter>
-    </ClInclude>
     <ClInclude Include="GroupPath.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -59,6 +41,21 @@
     </ClInclude>
     <ClInclude Include="ConnectingDB\exifGps.h">
       <Filter>ソース ファイル\ConnectingDB</Filter>
+    </ClInclude>
+    <ClInclude Include="FeatureClustering\FeatureClustering.h">
+      <Filter>ソース ファイル\featureClustering</Filter>
+    </ClInclude>
+    <ClInclude Include="FeatureClustering\ClusterOfFeature.h">
+      <Filter>ソース ファイル\featureClustering</Filter>
+    </ClInclude>
+    <ClInclude Include="FeatureClustering\ExtractFeatures.hpp">
+      <Filter>ソース ファイル\featureClustering</Filter>
+    </ClInclude>
+    <ClInclude Include="FeatureClustering\Matching.h">
+      <Filter>ソース ファイル\featureClustering</Filter>
+    </ClInclude>
+    <ClInclude Include="CONSTANT.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

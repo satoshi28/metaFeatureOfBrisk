@@ -62,26 +62,41 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 		//マッチングした特徴量をひとつにまとめメタ特徴量として保存する処理
 		for(int j = 0; j < clusterMatches[i].size(); j++)
 		{
-			int queryId = clusterMatches[i][j].queryIdx;					//マッチングさせた特徴量のID（クエリ番号）
-			int rank = 0;					//同じ空間から来た特徴点の数
+			int queryId = clusterMatches[i][j].queryIdx;	//マッチングさせた特徴量のID（クエリ番号）
+			int rank = 0;									//同じ空間から来た特徴点の数
+			cv::Mat descriptors;							//同じqueryIDをもつマッチング特徴量を格納
+			bool isFounded = false;
 
 			//重複して登録しないようにqueryIdが登録済みリストに載っているか確認。ある場合は飛ばす
 			for (int k = 0; k < matchList.size(); k++)
 			{
-				if (matchList[k] == queryId)
+				if (matchList[k] == queryId){
+					isFounded = true;
 					break;
+				}
 			}
-
+			if(isFounded == true)
+				continue;
+			
 			for(int k = 0; k < clusterMatches[i].size(); k++)	//query番号が一致する特徴量を探す
 			{
 				if (queryId == clusterMatches[i][k].queryIdx)
-					rank += 1;									//必ずrank>1(自身を参照しているから)
-			}
+				{
+					//int imgID = clusterMatches[i][k].imgIdx;
+					//int trainId = clusterMatches[i][k].trainIdx;
 
+					rank += 1;									//必ずrank>1(自身を参照しているから)
+					//descriptors.push_back( patterns[imgID].descriptors.row(trainId) );
+				}
+			}
+			
 			matchList.push_back(queryId);						//マッチングリストにqueryの番号を保存
 			
 			//特徴量の行に追加
-			cluster.metaDescriptors.push_back(patterns[i].descriptors.row(queryId) );
+			//descriptors.push_back( patterns[i].descriptors.row(queryId) );
+			//cv::Mat tmpDescriptors = getModeDescriptors(descriptors);
+			//cluster.metaDescriptors.push_back( tmpDescriptors );
+			cluster.metaDescriptors.push_back( patterns[i].descriptors.row(queryId) );
 			cluster.metaKeypoints.push_back(patterns[i].keypoints.at(queryId) );
 			cluster.rankingList.push_back(rank);
 
@@ -179,7 +194,7 @@ void FeatureClustering::rankImages(std::vector<ClusterOfFeature> clusters, std::
 	//画像ランキングの作成(clustersのサイズは画像の枚数)
 	for (int i = 0; i < clusters.size(); i++)
 	{
-		int rank = 0;												//画像のランキング
+		int rank = clusters[i].rankingList.size();												//画像のランキング
 		std::pair<int, int> list;									//ランキングのリスト
 
 		//各画像に対してメタ特徴量を構成する特徴量の数に基づいて投票

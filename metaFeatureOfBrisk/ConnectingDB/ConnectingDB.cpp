@@ -15,7 +15,7 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 {
 
 	//conect
-	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\db\\test2.accdb";
+	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\study_db\\zubud_200.accdb";
 	System::String^ strLocation ="SELECT tb_ロケーション情報.[ID], tb_ロケーション情報.[name_no], tb_ロケーション情報.[latitude], tb_ロケーション情報.[longitude] FROM tb_ロケーション情報";
 	System::String^ strDesc ="SELECT * FROM tb_特徴量";
 	System::String^ strKeypoints ="SELECT * FROM tb_特徴点";
@@ -135,6 +135,7 @@ void ConnectingDB::updateDescTable(OleDbDataAdapter^ adapter, std::vector<Patter
 			for(int k = 0; k < patterns[i].descriptors.cols ; k++)//64
 			{
 				descRow["ID"] = patterns[i].numberOfDB;
+				descRow["featureID"] = j;
 				descRow[(k+1).ToString()] = patterns[i].descriptors.at<unsigned char>(j,k);
 
 			}
@@ -163,6 +164,7 @@ void ConnectingDB::updateKeypointTable(OleDbDataAdapter^ adapter, std::vector<Pa
 			row = table->NewRow();
 
 			row["ID"] = patterns[i].numberOfDB;
+			row["featureID"] = j;
 			row["px"] = patterns[i].keypoints[j].pt.x;
 			row["py"] = patterns[i].keypoints[j].pt.y;
 			//行の追加

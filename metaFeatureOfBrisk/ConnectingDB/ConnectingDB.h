@@ -1,8 +1,8 @@
 #ifndef CONNECTING_DB
 #define CONNECTING_DB
 
-#define _MYSQL
-////////////////////////////////////////////////////////////////////
+#define _OLEDB
+
 using namespace System::Diagnostics;
 #ifdef _OLEDB
 using namespace System::Data::OleDb;

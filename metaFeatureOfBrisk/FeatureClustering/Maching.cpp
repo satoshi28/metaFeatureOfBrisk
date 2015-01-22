@@ -31,7 +31,8 @@ void Matching::getMatches(const std::vector<Pattern> patterns, std::vector< std:
 
 		//データのコピー
 		queryKeypoints = patterns[i].keypoints;
-		queryDescriptors = patterns[i].descriptors;	
+		queryDescriptors = patterns[i].descriptors;
+
 		//マッチングされる特徴量をすべてコピー
 		for(int j = 0; j < dataSetSize; j++)
 		{
@@ -138,7 +139,7 @@ void Matching::match(const std::vector<cv::KeyPoint> queryKeypoints,const cv::Ma
 
 bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoints, std::vector<cv::KeyPoint> trainKeypoints, std::vector<cv::DMatch>& matches)
 {
-	if(matches.size() < 30)
+	if(matches.size() < 8)
 	{
 		matches.clear();
 		return false;
@@ -154,12 +155,13 @@ bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 	std::vector<unsigned char> inliersMask(queryPoints.size() );
 
 	//幾何学的整合性チェックによって当たり値を抽出
-	cv::Mat homography = cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 3, inliersMask);
-
+	cv::Mat homography = cv::findHomography( queryPoints, trainPoints, CV_FM_RANSAC, 10, inliersMask);
+	/*
 	//Homography行列が正しいか検証
 	bool isGoodHomography = niceHomography(homography);
 	if(isGoodHomography == false)
 		return false;
+		*/
 
 	std::vector<cv::DMatch> inliers;
 	for(size_t i =0 ; i < inliersMask.size(); i++)

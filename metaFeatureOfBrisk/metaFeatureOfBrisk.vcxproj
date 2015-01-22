@@ -67,11 +67,13 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>C:\Library\opencv247\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies />
+      <AdditionalDependencies>opencv_core247.lib;opencv_highgui247.lib;opencv_imgproc247.lib;opencv_features2d247.lib;opencv_flann247.lib;opencv_calib3d247.lib;opencv_nonfree247.lib;opencv_objdetect247.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>C:\Library\opencv247\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -86,8 +88,8 @@
   <ItemGroup>
     <ClInclude Include="ConnectingDB\ConnectingDB.h" />
     <ClInclude Include="ConnectingDB\exifGps.h" />
+    <ClInclude Include="CONSTANT.h" />
     <ClInclude Include="FeatureClustering\ClusterOfFeature.h" />
-    <ClInclude Include="FeatureClustering\CONSTANT.h" />
     <ClInclude Include="FeatureClustering\ExtractFeatures.hpp" />
     <ClInclude Include="FeatureClustering\FeatureClustering.h" />
     <ClInclude Include="FeatureClustering\Matching.h" />
