@@ -162,7 +162,6 @@ bool Matching::geometricConsistencyCheck(std::vector<cv::KeyPoint> queryKeypoint
 	if(isGoodHomography == false)
 		return false;
 		*/
-
 	std::vector<cv::DMatch> inliers;
 	for(size_t i =0 ; i < inliersMask.size(); i++)
 	{

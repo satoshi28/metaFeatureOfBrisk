@@ -43,6 +43,10 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	featureBudgeting(clusters, imageRankingList, metaFeatures);
 	
 	//showMetaFeatures(patterns, metaFeatures);
+
+	if(metaFeatures.descriptors.rows != budget)
+		std::cout << metaFeatures.descriptors.rows << std::endl;
+
 	//後処理
 	patterns.clear();
 
@@ -82,21 +86,21 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 			{
 				if (queryId == clusterMatches[i][k].queryIdx)
 				{
-					//int imgID = clusterMatches[i][k].imgIdx;
-					//int trainId = clusterMatches[i][k].trainIdx;
+					int imgID = clusterMatches[i][k].imgIdx;
+					int trainId = clusterMatches[i][k].trainIdx;
 
 					rank += 1;									//必ずrank>1(自身を参照しているから)
-					//descriptors.push_back( patterns[imgID].descriptors.row(trainId) );
+					descriptors.push_back( patterns[imgID].descriptors.row(trainId) );
 				}
 			}
 			
 			matchList.push_back(queryId);						//マッチングリストにqueryの番号を保存
 			
 			//特徴量の行に追加
-			//descriptors.push_back( patterns[i].descriptors.row(queryId) );
-			//cv::Mat tmpDescriptors = getModeDescriptors(descriptors);
-			//cluster.metaDescriptors.push_back( tmpDescriptors );
-			cluster.metaDescriptors.push_back( patterns[i].descriptors.row(queryId) );
+			descriptors.push_back( patterns[i].descriptors.row(queryId) );
+			cv::Mat tmpDescriptors = getModeDescriptors(descriptors);
+			cluster.metaDescriptors.push_back( tmpDescriptors );
+			//cluster.metaDescriptors.push_back( patterns[i].descriptors.row(queryId) );
 			cluster.metaKeypoints.push_back(patterns[i].keypoints.at(queryId) );
 			cluster.rankingList.push_back(rank);
 
@@ -109,7 +113,7 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 			//マッチングリストにIDが登録されているか検索
 			std::vector<int>::iterator cIter = std::find(matchList.begin(), matchList.end(), k);
 			if (cIter != matchList.end())
-				break;
+				continue;
 
 			//マッチングリストになければ特徴量の行に追加
 			cluster.singleDescriptors.push_back(patterns[i].descriptors.row(k) );
