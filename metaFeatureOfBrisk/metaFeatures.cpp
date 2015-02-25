@@ -8,12 +8,19 @@
 
 bool readImages(std::vector<std::string> filenames, std::vector<cv::Mat>& images);
 
-int main(array<System::String ^> ^args)
+int main(int argc, char* argv[])
 {
+	if(argc < 2)
+	{
+		std::cout << "please input argumet" << std::cout;
+		return 1;
+	}
+	int budget = atoi(argv[1]);
+	std::string fileName = argv[2];
 
 	/* class */
 	GroupPath groupPath;
-	FeatureClustering clustering;
+	FeatureClustering clustering(budget);
 	ConnectingDB db;
 	exifGps gps;
 	/* •Ï”éŒ¾ */
@@ -25,6 +32,8 @@ int main(array<System::String ^> ^args)
 	groupPath.getPath(folder, sortFile);
 
 	std::vector<Pattern> metaFeatures( sortFile.size() );
+	
+	std::cout << "start " << budget << " fileName=" << fileName << std::endl;
 
 	for(int i = 0; i < sortFile.size(); i++)
 	{
@@ -44,11 +53,12 @@ int main(array<System::String ^> ^args)
 		metaFeatures[i].image = img;
 
 		//std::cout << metaFeature.descriptors << std::endl;
-		std::cout << "-----------------" << std::endl;
+		//std::cout << "-----------------" << std::endl;
 	}
-
-	db.updateDB(metaFeatures);
 	
+	db.updateDB(metaFeatures, fileName);
+	std::cout << "end" << std::endl;
+
 	return 0;
 }
 
@@ -59,9 +69,7 @@ bool readImages(std::vector<std::string> filenames, std::vector<cv::Mat>& images
 
 		cv::Mat image;
 		std::string a = filenames[i];
-		
 		std::cout << a << std::endl;
-
 		image = cv::imread(a,1);			//‰æ‘œ‚Ì“Ç‚Ýž‚Ý
 		if (image.empty())
 		{

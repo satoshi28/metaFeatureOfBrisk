@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <numeric>
+#include <random>
 
 #include "ExtractFeatures.hpp"
 #include "Matching.h"
@@ -17,7 +18,7 @@
 class FeatureClustering
 {
 public:
-	FeatureClustering(int m_budget = budget);
+	FeatureClustering(int m_budget);
 
 	/**
 	* @brief グループ化された画像群からメタ特徴量を作成する
@@ -71,7 +72,6 @@ private:
 
 	void showMetaFeatures(std::vector<Pattern> patterns,Pattern metaFeature);
 
-	cv::Mat getModeDescriptors(cv::Mat trainDescriptors);
 private:
 	int m_budget;					//メタ特徴量の予算
 	std::vector<Pattern> patterns;	//各画像の特徴

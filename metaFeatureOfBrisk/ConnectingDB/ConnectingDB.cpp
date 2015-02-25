@@ -11,19 +11,19 @@ ConnectingDB::~ConnectingDB()
 
 #ifdef _OLEDB
 
-int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
+int ConnectingDB::updateDB(std::vector<Pattern>& patterns, std::string fileName)
 {
-
-	//conect
-	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\study_db\\zubud_1200.accdb";
+	
+	System::String^ strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\satoshi\\Documents\\Visual Studio 2012\\study_db\\";
 	System::String^ strLocation ="SELECT tb_ロケーション情報.[ID], tb_ロケーション情報.[name_no], tb_ロケーション情報.[latitude], tb_ロケーション情報.[longitude] FROM tb_ロケーション情報";
 	System::String^ strDesc ="SELECT * FROM tb_特徴量";
 	System::String^ strKeypoints ="SELECT * FROM tb_特徴点";
+	System::String^ strName = gcnew System::String(fileName.c_str());
+
+	strConn = System::String::Concat( strConn, strName );
 
 	OleDbConnection^ conn = gcnew OleDbConnection(strConn);
 	conn->Open();
-
-
 
 	//トランザクションの開始
 	OleDbTransaction^ transaction = conn->BeginTransaction(System::Data::IsolationLevel::ReadCommitted);
@@ -249,11 +249,11 @@ void ConnectingDB::SaveToCSV(System::Data::DataTable^ dt, System::String^ fileNa
 
 
 #ifdef _MYSQL
-int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
+int ConnectingDB::updateDB(std::vector<Pattern>& patterns, std::string fileName)
 {
 
 	//conect
-	System::String^ strConn = "userid=root;password=root;database=objectdatabase2;Host=localhost";
+	System::String^ strConn = "userid=root;password=root;database=ichinosekiareadb;Host=localhost";
 	System::String^ strLocation ="SELECT * FROM tb_location";
 	System::String^ strDesc ="SELECT * FROM tb_descriptors";
 	System::String^ strInfo ="SELECT * FROM tb_information";
@@ -278,14 +278,22 @@ int ConnectingDB::updateDB(std::vector<Pattern>& patterns)
 		MySqlDataAdapter^ infoAdapter = gcnew MySqlDataAdapter(strInfo, strConn);
 		MySqlCommandBuilder^ infoBuilder = gcnew MySqlCommandBuilder(infoAdapter);
 
-		
+		int num=1;
+		//オートナンバーをPatternsに保存
+		for(int i = 0; i < patterns.size() ; i++)
+		{
+			//int num = System::Convert::ToInt32( dataChanges->Rows[i][0]->ToString() );
+			patterns[i].numberOfDB= num;
+			num++;
+		}
+
 		//tb_特徴量を更新
-		updateLocationTable(locationAdapter, patterns);
+		//updateLocationTable(locationAdapter, patterns);
 		//tb_特徴量を更新
 		updateDescTable(descAdapter, patterns);
 		
 		//tb_informationを更新
-		updateInfoTable(infoAdapter, patterns);
+		//updateInfoTable(infoAdapter, patterns);
 		//トランザクションをコミットします。
         transaction->Commit();
 

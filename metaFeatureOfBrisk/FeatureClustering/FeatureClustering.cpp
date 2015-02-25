@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "FeatureClustering.h"
 
-FeatureClustering::FeatureClustering(int buget)
-	: m_budget(buget)
+FeatureClustering::FeatureClustering(int budget)
 {
+	m_budget = budget;
 }
 
 void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& metaFeatures)
@@ -23,16 +23,14 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	std::vector<ClusterOfFeature> clusters;
 	//マッチング結果からクラスタリング特徴量を作成する
 	clusterDescriptors(clusterMatches, clusters);
-	//
-	std::cout << "OK" << std::endl;
 	
-	/*
+	
 	for(int i = 0; i < patterns.size(); i++)
 	{
 		showResult(patterns[i], clusters[i]);
 		cv::waitKey(0);
 	}
-	*/
+	
 
 	//画像をランク付け
 	std::vector< std::pair<int, int> > imageRankingList;
@@ -44,7 +42,7 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 	
 	//showMetaFeatures(patterns, metaFeatures);
 
-	if(metaFeatures.descriptors.rows != budget)
+	if(metaFeatures.descriptors.rows != m_budget)
 		std::cout << metaFeatures.descriptors.rows << std::endl;
 
 	//後処理
@@ -54,7 +52,8 @@ void FeatureClustering::clusterFeatures(std::vector<cv::Mat> images, Pattern& me
 
 
 //マッチングリストからマッチングした特徴量同士に基づいて一つの特徴量にまとめる処理
-void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>> clusterMatches, std::vector<ClusterOfFeature>& clusters)
+void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>> clusterMatches,
+											std::vector<ClusterOfFeature>& clusters)
 {
 	for(int i = 0; i < clusterMatches.size(); i++)
 	{
@@ -86,21 +85,14 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 			{
 				if (queryId == clusterMatches[i][k].queryIdx)
 				{
-					int imgID = clusterMatches[i][k].imgIdx;
-					int trainId = clusterMatches[i][k].trainIdx;
-
 					rank += 1;									//必ずrank>1(自身を参照しているから)
-					descriptors.push_back( patterns[imgID].descriptors.row(trainId) );
 				}
 			}
 			
 			matchList.push_back(queryId);						//マッチングリストにqueryの番号を保存
 			
 			//特徴量の行に追加
-			descriptors.push_back( patterns[i].descriptors.row(queryId) );
-			cv::Mat tmpDescriptors = getModeDescriptors(descriptors);
-			cluster.metaDescriptors.push_back( tmpDescriptors );
-			//cluster.metaDescriptors.push_back( patterns[i].descriptors.row(queryId) );
+			cluster.metaDescriptors.push_back( patterns[i].descriptors.row(queryId) );
 			cluster.metaKeypoints.push_back(patterns[i].keypoints.at(queryId) );
 			cluster.rankingList.push_back(rank);
 
@@ -120,10 +112,6 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 			cluster.singleKeypoints.push_back(patterns[i].keypoints.at(k) );
 
 		}
-
-		//シングル特徴量はランダムに並べ替え			
-		//random_shuffle(cluster.singleKeypoints.begin(), cluster.singleKeypoints.end());
-
 		//clusterの最大サイズを保存
 		cluster.maxClusterSize = clusterMatches.size();
 
@@ -135,7 +123,9 @@ void FeatureClustering::clusterDescriptors( std::vector<std::vector<cv::DMatch>>
 
 }
 
-void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters, std::vector< std::pair<int, int> > imageRankingList, Pattern& metaFeature)
+void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
+										 std::vector< std::pair<int, int> > imageRankingList,
+										 Pattern& metaFeature)
 {
 	//特徴量の次元数
 	int cols = clusters[0].metaDescriptors.cols;
@@ -191,7 +181,8 @@ void FeatureClustering::featureBudgeting(std::vector<ClusterOfFeature> clusters,
 
 }
 
-void FeatureClustering::rankImages(std::vector<ClusterOfFeature> clusters, std::vector< std::pair<int, int> >& imageRankingList)
+void FeatureClustering::rankImages(std::vector<ClusterOfFeature> clusters,
+								   std::vector< std::pair<int, int> >& imageRankingList)
 {
 	imageRankingList.clear();
 
@@ -216,7 +207,10 @@ void FeatureClustering::rankImages(std::vector<ClusterOfFeature> clusters, std::
 
 }
 
-bool FeatureClustering::createMetaFeature(std::vector<cv::Mat> rankedDescriptors,std::vector< std::vector<cv::KeyPoint>> rankedKeypoints,std::vector<int> imgNumbers, Pattern& metaFeature)
+bool FeatureClustering::createMetaFeature(std::vector<cv::Mat> rankedDescriptors,
+										  std::vector< std::vector<cv::KeyPoint>> rankedKeypoints,
+										  std::vector<int> imgNumbers,
+										  Pattern& metaFeature)
 {
 	bool isBeFilled = false;									//特徴量の割り当てが予算まで達したか
 	std::vector<int> descSize;									//各descriptorsの残り特徴量数
@@ -284,7 +278,9 @@ bool FeatureClustering::createMetaFeature(std::vector<cv::Mat> rankedDescriptors
 	return isBeFilled;
 }
 
-void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters,std::vector<std::pair<int, int>> rankingIndex, Pattern& metaFeature)
+void FeatureClustering::addSingleFeatures(std::vector<ClusterOfFeature> clusters,
+										  std::vector<std::pair<int, int>> rankingIndex,
+										  Pattern& metaFeature)
 {
 	std::vector<int> descSize;									//各descriptorsの残り特徴量数
 	bool isBeFilled = false;									//特徴量の割り当てが予算まで達したか
@@ -353,6 +349,11 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 	cv::Mat clusteringResult;
 	clusteringResult = pattern.image.clone();
 
+	for(int i = 0; i < cluster.singleKeypoints.size(); i++)
+	{//black
+		cv::circle(clusteringResult, cluster.singleKeypoints[i].pt , 1, cv::Scalar(0,0,0),2, CV_FILLED);
+	}
+
 	for(int i = 0; i < cluster.metaKeypoints.size(); i++)
 	{//white
 		switch (cluster.rankingList[i])
@@ -385,13 +386,10 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 		cv::putText(clusteringResult, rank, cluster.metaKeypoints[i].pt, cv::FONT_HERSHEY_SIMPLEX, 0.3, cv::Scalar(255,255,255), 1, CV_AA);
 	}
 	
-	for(int i = 0; i < cluster.singleKeypoints.size(); i++)
-	{//black
-		cv::circle(clusteringResult, cluster.singleKeypoints[i].pt , 1, cv::Scalar(0,0,0),2, CV_FILLED);
-	}
+
 	
 	cv::imshow("clusterinResult",clusteringResult);
-	/*
+	
 	static int count = 0;
 	std::stringstream ss;
 	ss << count;
@@ -400,11 +398,11 @@ void FeatureClustering::showResult(Pattern pattern,ClusterOfFeature cluster)
 	result += ".png";
 	cv::imwrite(result,clusteringResult);
 	count++;
-	*/
+	
 	
 }
 
-void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern metaFeature)
+void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns, Pattern metaFeature)
 {
 	for(int i =0; i< patterns.size();i++)
 	{
@@ -418,9 +416,9 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 			if(metaFeature.paramOfKeypoints[j].second == i)
 			{
 				if(metaFeature.paramOfKeypoints[j].first == true)//複数の画像で見つかったか
-					cv::circle(metaResult,metaFeature.keypoints[j].pt , 4, cv::Scalar(0,0,255),-1, CV_AA);
+					cv::circle(metaResult,metaFeature.keypoints[j].pt , 3, cv::Scalar(0,153,255),-1, CV_AA);
 				else													//シングルの特徴
-					cv::circle(metaResult,metaFeature.keypoints[j].pt , 4, cv::Scalar(0,0,0),-1, CV_AA);
+					cv::circle(metaResult,metaFeature.keypoints[j].pt , 3, cv::Scalar(0,0,0),-1, CV_AA);
 
 				metaFeaturesSize++;
 
@@ -430,7 +428,7 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 		cv::imshow("metaResult",metaResult);
 		std::cout << metaFeaturesSize << std::endl;
 		cv::waitKey(0);
-		/*
+		
 		static int count = 0;
 		std::stringstream ss;
 		ss << count;
@@ -439,90 +437,6 @@ void  FeatureClustering::showMetaFeatures(std::vector<Pattern> patterns,Pattern 
 		result += ".png";
 		cv::imwrite(result,metaResult);
 		count++;
-		*/
+		
 	}
-}
-
-cv::Mat FeatureClustering::getModeDescriptors(cv::Mat trainDescriptors)
-{
-	//入力された特徴点の特徴量が2以下の場合は最後の要素を返す
-	if (trainDescriptors.rows <= 2)
-		return trainDescriptors.row(trainDescriptors.rows - 1);
-
-	std::vector < std::vector < std::vector<bool> >> bitTrainDescriptors;
-	unsigned char mask[8] = { 0 };		//unsigned charをbool配列に変換するためのマスク
-
-	//マスクの作成
-	mask[0] = 1;
-	for (int i = 1; i < 8; i++)
-	{
-		mask[i] = mask[i - 1] * 2;
-	}
-
-	//特徴量をビット配列に変換
-	for (int i = 0; i < trainDescriptors.rows; i++)
-	{
-		cv::Mat descriptors = trainDescriptors.row(i).clone();	//一つの特徴点の特徴量
-		std::vector<std::vector<bool> > bitDescriptors;		//ビット配列に変換した特徴量
-		//std::cout << descriptors << std::endl;
-
-		for (int j = 0; j < 64; j++)		//dimension
-		{
-			unsigned char descriptor = descriptors.at<unsigned char>(0, j);	//次元ごとの特徴量
-			std::vector<bool> bitArray(8);												//特徴量のビット表現
-
-			for (int k = 0; k < 8; k++)		//bit
-			{
-				//各ビットを抽出
-				unsigned char bit = descriptor & mask[k];
-
-				if (bit != 0)
-					bitArray[k] = true;
-				else
-					bitArray[k] = false;
-			}
-			//ビット表現にした特徴量の格納
-			bitDescriptors.push_back(bitArray);
-		}
-		bitTrainDescriptors.push_back(bitDescriptors);
-	}
-
-	//複数の特徴量から最頻値のビットに置き換えた特徴量へ変換する
-	cv::Mat modeDescriptors = cv::Mat::zeros(cv::Size(64, 1), CV_8U);		//ビット配列に変換した特徴量
-	for (int i = 0; i < 64; i++)		//dimension
-	{
-		std::vector<unsigned char> bitArray(8);
-		for (int j = 0; j < 8; j++)
-		{
-			int countOfZero = 0;
-			int countOfOne = 0;
-
-			for (int k = 0; k < bitTrainDescriptors.size(); k++)		//bit
-			{
-				bool isOne = bitTrainDescriptors[k][i][j];
-				if (isOne == true)
-					countOfOne++;
-				else
-					countOfZero++;
-			}
-
-			//最頻値に基づいてビットを決定
-			if (countOfOne < countOfZero)
-				bitArray[j] = 0;
-			else if (countOfOne >= countOfZero)
-				bitArray[j] = 1;
-		}
-
-		//bitArrayからunsignend charに変換
-		unsigned char dim = 0;
-		for (int j = 0; j < bitArray.size(); j++)
-		{
-			if (bitArray[j] != 0)
-				dim += (unsigned char)std::pow(2.0, (double)j);
-		}
-		//Matに格納
-		modeDescriptors.at<unsigned char>(0, i) = dim;
-	}
-	//std::cout << modeDescriptors << std::endl;
-	return modeDescriptors;
 }

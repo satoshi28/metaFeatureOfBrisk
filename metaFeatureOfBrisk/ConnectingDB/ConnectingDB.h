@@ -1,7 +1,7 @@
 #ifndef CONNECTING_DB
 #define CONNECTING_DB
 
-#define _OLEDB
+#define _MYSQL
 
 using namespace System::Diagnostics;
 #ifdef _OLEDB
@@ -14,6 +14,7 @@ using namespace MySql::Data::MySqlClient;
 
 
 #include "../Pattern.h"
+
 class ConnectingDB
 {
 public:
@@ -21,7 +22,7 @@ public:
 	~ConnectingDB();
 	
 	/* Pattern内部の情報をデータベースに追加する */
-	int updateDB(std::vector<Pattern>& patterns);
+	int updateDB(std::vector<Pattern>& patterns, std::string fileName);
 
 	/* DataTableをcsvファイルに保存する */
 	void SaveToCSV(System::Data::DataTable^ dt, System::String^ fileName, bool hasHeader, 
